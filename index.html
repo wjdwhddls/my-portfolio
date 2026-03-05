@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정종인 - AI Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-900 text-slate-50">
+
+    <!-- Scroll Progress Bar -->
+    <div id="scroll-progress" style="width: 0%"></div>
+
+    <!-- Cursor Glow -->
+    <div id="cursor-glow" class="hidden md:block"></div>
+
+    <!-- Navbar -->
+    <nav id="navbar" class="fixed top-0 w-full z-50 transition-all duration-300">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="#home" class="text-2xl font-bold gradient-text">JJ</a>
+
+            <div class="hidden md:flex gap-8">
+                <a href="#home" class="nav-link active">홈</a>
+                <a href="#about" class="nav-link">소개</a>
+                <a href="#projects" class="nav-link">프로젝트</a>
+                <a href="#contact" class="nav-link">연락처</a>
+            </div>
+
+            <button id="mobile-menu-btn" class="md:hidden text-slate-50 text-2xl">☰</button>
+        </div>
+
+        <div id="mobile-menu" class="hidden md:hidden glass border-t border-slate-700">
+            <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col gap-4">
+                <a href="#home" class="nav-link active">홈</a>
+                <a href="#about" class="nav-link">소개</a>
+                <a href="#projects" class="nav-link">프로젝트</a>
+                <a href="#contact" class="nav-link">연락처</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="min-h-screen flex items-center justify-center relative overflow-hidden pt-20">
+        <!-- Particle Canvas -->
+        <canvas id="particles"></canvas>
+
+        <!-- Background Gradient -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-20 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl float-animate"></div>
+            <div class="absolute bottom-20 left-0 w-72 h-72 bg-indigo-500/5 rounded-full blur-3xl" style="animation: float 4s ease-in-out infinite 1s;"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-4 py-20 relative z-10">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <!-- Left Content -->
+                <div class="space-y-6 fade-in-up">
+                    <p class="text-indigo-400 font-medium text-lg">안녕하세요 👋</p>
+                    <h1 class="text-5xl md:text-7xl font-bold leading-tight">
+                        <span class="gradient-text">정종인</span>
+                    </h1>
+                    <div class="h-16 flex items-center">
+                        <span class="text-2xl md:text-3xl text-slate-300">
+                            <span class="typing-text" id="typing-text">Frontend Developer</span>
+                        </span>
+                    </div>
+                    <p class="text-slate-400 text-lg leading-relaxed max-w-lg">
+                        AI 기반 솔루션 개발에 열정을 가진 개발자입니다.<br>
+                        머신러닝과 자연어 처리 기술을 활용해<br>
+                        더 스마트한 사용자 경험을 만들어갑니다.
+                    </p>
+                    <div class="flex gap-4 pt-8 slide-in-left" style="animation-delay: 0.3s;">
+                        <a href="#projects" class="magnetic-btn btn-ripple px-8 py-3 bg-indigo-500 hover:bg-indigo-400 rounded-lg font-medium transition-colors">
+                            프로젝트 보기
+                        </a>
+                        <a href="#contact" class="magnetic-btn btn-ripple px-8 py-3 border border-indigo-500 text-indigo-400 hover:bg-indigo-500/10 rounded-lg font-medium transition-colors">
+                            연락하기
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right - Code Editor Mock -->
+                <div class="hidden md:flex justify-center items-center">
+                    <div class="relative w-full max-w-md">
+                        <div class="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl blur-2xl opacity-15 float-animate"></div>
+                        <div class="glass rounded-2xl overflow-hidden">
+                            <!-- Editor Title Bar -->
+                            <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-700/50">
+                                <div class="flex gap-1.5">
+                                    <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                                </div>
+                                <span class="text-xs text-slate-500 ml-2">portfolio.ts</span>
+                            </div>
+                            <!-- Editor Content -->
+                            <div class="code-editor p-4 space-y-1" id="code-editor">
+                                <div class="flex code-line" style="animation-delay: 0.2s;">
+                                    <span class="line-number">1</span>
+                                    <span><span class="code-keyword">const</span> <span class="code-variable">developer</span> = <span class="code-bracket">{</span></span>
+                                </div>
+                                <div class="flex code-line" style="animation-delay: 0.4s;">
+                                    <span class="line-number">2</span>
+                                    <span>&nbsp;&nbsp;name: <span class="code-string">"정종인"</span>,</span>
+                                </div>
+                                <div class="flex code-line" style="animation-delay: 0.6s;">
+                                    <span class="line-number">3</span>
+                                    <span>&nbsp;&nbsp;role: <span class="code-string">"AI Assistant"</span>,</span>
+                                </div>
+                                <div class="flex code-line" style="animation-delay: 0.8s;">
+                                    <span class="line-number">4</span>
+                                    <span>&nbsp;&nbsp;passion: <span class="code-string">"Building Smart UX"</span>,</span>
+                                </div>
+                                <div class="flex code-line" style="animation-delay: 1.0s;">
+                                    <span class="line-number">5</span>
+                                    <span>&nbsp;&nbsp;<span class="code-function">create</span>() <span class="code-bracket">{</span></span>
+                                </div>
+                                <div class="flex code-line" style="animation-delay: 1.2s;">
+                                    <span class="line-number">6</span>
+                                    <span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span> <span class="code-string">"Amazing Things"</span>;</span>
+                                </div>
+                                <div class="flex code-line" style="animation-delay: 1.4s;">
+                                    <span class="line-number">7</span>
+                                    <span>&nbsp;&nbsp;<span class="code-bracket">}</span></span>
+                                </div>
+                                <div class="flex code-line" style="animation-delay: 1.6s;">
+                                    <span class="line-number">8</span>
+                                    <span><span class="code-bracket">}</span>;</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 relative dot-pattern">
+        <div class="absolute inset-0 bg-slate-900/90"></div>
+        <div class="max-w-6xl mx-auto px-4 space-y-16 relative z-10">
+            <!-- Section Header -->
+            <div class="text-center space-y-4 fade-in-up">
+                <h2 class="text-4xl md:text-5xl font-bold"><span class="gradient-text">소개</span></h2>
+                <p class="text-slate-400 max-w-2xl mx-auto">
+                    저는 3년간의 웹 개발 경험으로 다양한 프로젝트를 성공적으로 마쳤습니다.
+                    최신 기술을 학습하며 지속적으로 성장하고 있습니다.
+                </p>
+            </div>
+
+            <!-- Skills -->
+            <div class="space-y-8 fade-in-up" style="animation-delay: 0.2s;">
+                <h3 class="text-2xl font-bold text-center">기술 스택</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 stagger-children" id="skills-grid">
+                    <div class="skill-badge glass-card rounded-xl px-4 py-4 text-center cursor-pointer group">
+                        <div class="text-2xl mb-2">🌐</div>
+                        <span class="font-medium text-sm">HTML5</span>
+                    </div>
+                    <div class="skill-badge glass-card rounded-xl px-4 py-4 text-center cursor-pointer group">
+                        <div class="text-2xl mb-2">🎨</div>
+                        <span class="font-medium text-sm">CSS3</span>
+                    </div>
+                    <div class="skill-badge glass-card rounded-xl px-4 py-4 text-center cursor-pointer group">
+                        <div class="text-2xl mb-2">⚡</div>
+                        <span class="font-medium text-sm">JavaScript</span>
+                    </div>
+                    <div class="skill-badge glass-card rounded-xl px-4 py-4 text-center cursor-pointer group">
+                        <div class="text-2xl mb-2">⚛️</div>
+                        <span class="font-medium text-sm">React</span>
+                    </div>
+                    <div class="skill-badge glass-card rounded-xl px-4 py-4 text-center cursor-pointer group">
+                        <div class="text-2xl mb-2">📘</div>
+                        <span class="font-medium text-sm">TypeScript</span>
+                    </div>
+                    <div class="skill-badge glass-card rounded-xl px-4 py-4 text-center cursor-pointer group">
+                        <div class="text-2xl mb-2">🎯</div>
+                        <span class="font-medium text-sm">Tailwind</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="space-y-8 fade-in-up" style="animation-delay: 0.4s;">
+                <h3 class="text-2xl font-bold text-center">경력 & 학력</h3>
+                <div class="space-y-6 max-w-2xl mx-auto">
+                    <div class="flex gap-6">
+                        <div class="relative flex flex-col items-center">
+                            <div class="w-4 h-4 bg-indigo-500 rounded-full mt-2 shadow-lg shadow-indigo-500/50"></div>
+                            <div class="w-1 h-20 bg-gradient-to-b from-indigo-500/50 to-transparent"></div>
+                        </div>
+                        <div class="glass-card rounded-xl p-6 flex-1">
+                            <h4 class="font-bold text-lg">Senior Frontend Developer</h4>
+                            <p class="text-indigo-400 text-sm">Tech Company Inc. | 2023 - Present</p>
+                            <p class="text-slate-400 text-sm mt-2">React 및 TypeScript 기반의 대규모 웹 애플리케이션 개발</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-6">
+                        <div class="relative flex flex-col items-center">
+                            <div class="w-4 h-4 bg-indigo-500 rounded-full mt-2 shadow-lg shadow-indigo-500/50"></div>
+                            <div class="w-1 h-20 bg-gradient-to-b from-indigo-500/50 to-transparent"></div>
+                        </div>
+                        <div class="glass-card rounded-xl p-6 flex-1">
+                            <h4 class="font-bold text-lg">Frontend Developer</h4>
+                            <p class="text-indigo-400 text-sm">Startup XYZ | 2021 - 2023</p>
+                            <p class="text-slate-400 text-sm mt-2">반응형 웹사이트 설계 및 개발, UI/UX 개선</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-6">
+                        <div class="relative flex flex-col items-center">
+                            <div class="w-4 h-4 bg-indigo-500 rounded-full mt-2 shadow-lg shadow-indigo-500/50"></div>
+                        </div>
+                        <div class="glass-card rounded-xl p-6 flex-1">
+                            <h4 class="font-bold text-lg">컴퓨터공학 학사</h4>
+                            <p class="text-indigo-400 text-sm">한국 대학교 | 2018 - 2021</p>
+                            <p class="text-slate-400 text-sm mt-2">웹 개발 및 소프트웨어 엔지니어링 전공</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="py-20 relative">
+        <div class="max-w-6xl mx-auto px-4 space-y-16">
+            <!-- Section Header -->
+            <div class="text-center space-y-4 fade-in-up">
+                <h2 class="text-4xl md:text-5xl font-bold"><span class="gradient-text">프로젝트</span></h2>
+                <p class="text-slate-400 max-w-2xl mx-auto">
+                    다양한 프로젝트를 통해 기술을 연습하고 실무 경험을 쌓고 있습니다.
+                </p>
+            </div>
+
+            <!-- Projects Grid -->
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Project 1 -->
+                <div class="card-3d gradient-border glass-card rounded-2xl overflow-hidden fade-in-up" style="animation-delay: 0.1s;" data-tilt>
+                    <div class="h-48 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 relative overflow-hidden dot-pattern">
+                        <div class="absolute inset-0 bg-slate-900/50"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-5xl opacity-50">🛒</div>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <h3 class="text-xl font-bold">이커머스 웹사이트</h3>
+                        <p class="text-slate-400 text-sm">
+                            React와 Redux로 구축한 현대적인 온라인 쇼핑몰 플랫폼. 장바구니, 결제 기능, 사용자 인증 등 완벽한 전자상거래 경험 제공.
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-indigo-500/10 text-indigo-400 text-xs px-3 py-1 rounded-full border border-indigo-500/20">React</span>
+                            <span class="bg-indigo-500/10 text-indigo-400 text-xs px-3 py-1 rounded-full border border-indigo-500/20">Redux</span>
+                            <span class="bg-indigo-500/10 text-indigo-400 text-xs px-3 py-1 rounded-full border border-indigo-500/20">API</span>
+                        </div>
+                        <div class="flex gap-3 pt-4">
+                            <a href="#" class="btn-ripple flex-1 bg-indigo-500 hover:bg-indigo-400 text-center py-2 rounded-lg text-sm font-medium transition-colors">
+                                GitHub
+                            </a>
+                            <a href="#" class="btn-ripple flex-1 border border-indigo-500 text-indigo-400 hover:bg-indigo-500/10 text-center py-2 rounded-lg text-sm font-medium transition-colors">
+                                Demo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 2 -->
+                <div class="card-3d gradient-border glass-card rounded-2xl overflow-hidden fade-in-up" style="animation-delay: 0.2s;" data-tilt>
+                    <div class="h-48 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 relative overflow-hidden dot-pattern">
+                        <div class="absolute inset-0 bg-slate-900/50"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-5xl opacity-50">📝</div>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <h3 class="text-xl font-bold">할 일 관리 앱</h3>
+                        <p class="text-slate-400 text-sm">
+                            TypeScript와 Context API를 활용한 간단하고 효율적인 할 일 관리 애플리케이션. 로컬 스토리지로 데이터 지속성 구현.
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-indigo-500/10 text-indigo-400 text-xs px-3 py-1 rounded-full border border-indigo-500/20">TypeScript</span>
+                            <span class="bg-indigo-500/10 text-indigo-400 text-xs px-3 py-1 rounded-full border border-indigo-500/20">Context API</span>
+                            <span class="bg-indigo-500/10 text-indigo-400 text-xs px-3 py-1 rounded-full border border-indigo-500/20">Tailwind</span>
+                        </div>
+                        <div class="flex gap-3 pt-4">
+                            <a href="#" class="btn-ripple flex-1 bg-indigo-500 hover:bg-indigo-400 text-center py-2 rounded-lg text-sm font-medium transition-colors">
+                                GitHub
+                            </a>
+                            <a href="#" class="btn-ripple flex-1 border border-indigo-500 text-indigo-400 hover:bg-indigo-500/10 text-center py-2 rounded-lg text-sm font-medium transition-colors">
+                                Demo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 3 -->
+                <div class="card-3d gradient-border glass-card rounded-2xl overflow-hidden fade-in-up" style="animation-delay: 0.3s;" data-tilt>
+                    <div class="h-48 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 relative overflow-hidden dot-pattern">
+                        <div class="absolute inset-0 bg-slate-900/50"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-5xl opacity-50">🎵</div>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <h3 class="text-xl font-bold">음악 플레이어</h3>
+                        <p class="text-slate-400 text-sm">
+                            Vanilla JavaScript로 개발한 스타일리시한 음악 플레이어. 재생 컨트롤, 볼륨 조절, 플레이리스트 관리 기능 포함.
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="bg-indigo-500/10 text-indigo-400 text-xs px-3 py-1 rounded-full border border-indigo-500/20">JavaScript</span>
+                            <span class="bg-indigo-500/10 text-indigo-400 text-xs px-3 py-1 rounded-full border border-indigo-500/20">HTML5 Audio</span>
+                            <span class="bg-indigo-500/10 text-indigo-400 text-xs px-3 py-1 rounded-full border border-indigo-500/20">CSS3</span>
+                        </div>
+                        <div class="flex gap-3 pt-4">
+                            <a href="#" class="btn-ripple flex-1 bg-indigo-500 hover:bg-indigo-400 text-center py-2 rounded-lg text-sm font-medium transition-colors">
+                                GitHub
+                            </a>
+                            <a href="#" class="btn-ripple flex-1 border border-indigo-500 text-indigo-400 hover:bg-indigo-500/10 text-center py-2 rounded-lg text-sm font-medium transition-colors">
+                                Demo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 relative dot-pattern">
+        <div class="absolute inset-0 bg-slate-900/90"></div>
+        <div class="max-w-6xl mx-auto px-4 space-y-16 relative z-10">
+            <!-- Section Header -->
+            <div class="text-center space-y-4 fade-in-up">
+                <h2 class="text-4xl md:text-5xl font-bold"><span class="gradient-text">연락처</span></h2>
+                <p class="text-slate-400 max-w-2xl mx-auto">
+                    프로젝트 협업이나 궁금한 점이 있으시면 언제든지 연락 주세요!
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 items-start max-w-4xl mx-auto">
+                <!-- Contact Info -->
+                <div class="space-y-8 fade-in-up" style="animation-delay: 0.1s;">
+                    <div class="glass-card rounded-xl p-6 space-y-2">
+                        <h3 class="font-bold text-lg">이메일</h3>
+                        <a href="mailto:honggildong@example.com" class="text-indigo-400 hover:text-indigo-300 transition-colors">
+                            honggildong@example.com
+                        </a>
+                    </div>
+
+                    <div class="glass-card rounded-xl p-6 space-y-4">
+                        <h3 class="font-bold text-lg">소셜 링크</h3>
+                        <div class="flex gap-4">
+                            <a href="https://github.com/honggildong" target="_blank" rel="noopener noreferrer" class="skill-badge w-12 h-12 glass-card rounded-xl flex items-center justify-center">
+                                <span class="text-xl">🔗</span>
+                            </a>
+                            <a href="#" target="_blank" rel="noopener noreferrer" class="skill-badge w-12 h-12 glass-card rounded-xl flex items-center justify-center">
+                                <span class="text-xl">💼</span>
+                            </a>
+                            <a href="#" target="_blank" rel="noopener noreferrer" class="skill-badge w-12 h-12 glass-card rounded-xl flex items-center justify-center">
+                                <span class="text-xl">𝕏</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Form -->
+                <form id="contact-form" class="space-y-4 fade-in-up" style="animation-delay: 0.2s;">
+                    <div class="relative">
+                        <label for="name" class="block text-sm font-medium mb-2">이름</label>
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            required
+                            class="input-glow w-full glass-card rounded-xl px-4 py-3 text-slate-50 placeholder-slate-500 focus:border-indigo-500 focus:outline-none transition-all"
+                            placeholder="이름을 입력하세요"
+                        >
+                    </div>
+
+                    <div class="relative">
+                        <label for="email" class="block text-sm font-medium mb-2">이메일</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            required
+                            class="input-glow w-full glass-card rounded-xl px-4 py-3 text-slate-50 placeholder-slate-500 focus:border-indigo-500 focus:outline-none transition-all"
+                            placeholder="이메일을 입력하세요"
+                        >
+                    </div>
+
+                    <div class="relative">
+                        <label for="message" class="block text-sm font-medium mb-2">메시지</label>
+                        <textarea
+                            id="message"
+                            name="message"
+                            required
+                            rows="4"
+                            class="input-glow w-full glass-card rounded-xl px-4 py-3 text-slate-50 placeholder-slate-500 focus:border-indigo-500 focus:outline-none transition-all resize-none"
+                            placeholder="메시지를 입력하세요"
+                        ></textarea>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="magnetic-btn btn-ripple w-full bg-indigo-500 hover:bg-indigo-400 text-slate-900 font-bold py-3 rounded-xl transition-all hover:shadow-lg hover:shadow-indigo-500/25"
+                    >
+                        메시지 보내기
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-800 py-8">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-slate-400">© 2024 정종인. All rights reserved.</p>
+                <div class="flex gap-6 text-slate-400">
+                    <a href="#home" class="hover:text-indigo-400 transition-colors">홈</a>
+                    <a href="#about" class="hover:text-indigo-400 transition-colors">소개</a>
+                    <a href="#projects" class="hover:text-indigo-400 transition-colors">프로젝트</a>
+                    <a href="#contact" class="hover:text-indigo-400 transition-colors">연락처</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top Button -->
+    <button id="scroll-top" class="fixed bottom-8 right-8 w-12 h-12 glass rounded-xl flex items-center justify-center text-indigo-400 hover:text-indigo-300 hover:border-indigo-500 transition-all z-50">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </button>
+
+    <script src="main.js"></script>
+</body>
+</html>
