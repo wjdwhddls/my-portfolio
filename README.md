@@ -1,197 +1,141 @@
-# 🚀 Portfolio Site | 포트폴리오
+# 🚀 정종인 Portfolio | Jeong Jong-in Portfolio
 
-[![Deployed](https://img.shields.io/badge/Status-Live-brightgreen?style=flat-square)](https://wjdwhddls.github.io/my-portfolio/)
-[![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
-[![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
-[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![Live](https://img.shields.io/badge/Status-Live-brightgreen?style=flat-square)](https://wjdwhddls.github.io/my-portfolio/)
+[![Astro](https://img.shields.io/badge/Astro-4.x-FF5D01?style=flat-square&logo=astro&logoColor=white)](https://astro.build/)
+[![Tailwind](https://img.shields.io/badge/Tailwind-3.x-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-## 🎯 [Live Demo →](https://wjdwhddls.github.io/my-portfolio/)
-
----
-
-## 📌 소개 | Introduction
-
-정종인(Jeong Jong-in)의 개인 포트폴리오 웹사이트입니다. 현대적인 웹 기술과 창의적인 UI/UX 디자인으로 제작되었으며, 프로젝트와 기술 역량을 효과적으로 보여줄 수 있도록 설계되었습니다.
-
-**Personal portfolio website featuring modern web technologies and creative UI/UX design to effectively showcase projects and technical expertise.**
-
-### ✨ 주요 특징 | Key Features
-
-- 🎨 **파티클 배경 애니메이션** - Canvas API를 활용한 동적 입자 효과
-- ⌨️ **타이핑 효과** - 자동 순환하는 텍스트 애니메이션
-- 👁️ **스크롤 애니메이션** - IntersectionObserver 기반의 페이드인 효과
-- 🎭 **3D 카드 틸트** - 마우스 움직임에 반응하는 3D 카드 효과
-- 🧲 **자기장 버튼 효과** - 자석처럼 따라오는 인터랙티브 버튼
-- 🌫️ **글래스모피즘 UI** - 현대적인 유리 효과 디자인
-- 📊 **스크롤 진행 바** - 페이지 진행 상황 시각화
-- 📱 **완벽한 반응형 디자인** - 모바일, 태블릿, 데스크톱 모두 최적화
-- 🍔 **모바일 네비게이션** - 터치 친화적 햄버거 메뉴
+> AI Engineer / Backend Developer 정종인의 개인 포트폴리오 사이트
+>
+> **Live**: <https://wjdwhddls.github.io/my-portfolio/>
 
 ---
 
-## 🛠️ 기술 스택 | Tech Stack
+## 📌 About
 
-### Frontend
-- **Markup**: HTML5
-- **Styling**: CSS3 + TailwindCSS (CDN)
-- **Programming**: Vanilla JavaScript (ES6+)
-- **Fonts**: Google Fonts (Noto Sans KR)
-- **Graphics**: Canvas API for Particle Animation
-- **Performance**: IntersectionObserver API
+PyTorch 기반 멀티모달 AI와 TypeScript 백엔드를 함께 다루는 개발자입니다. 실시간 딥보이스 탐지, 음향 자동 최적화, 데이터 기반 추천 시스템 등 실세계 문제를 AI와 엔지니어링으로 풉니다.
 
-### Key Libraries & APIs
-- Canvas 2D Context
-- Fetch API
-- LocalStorage
-- CSS Custom Properties
+### Featured Projects
+
+| Project | Summary | Stack |
+|---|---|---|
+| **[POFLIX](https://github.com/wjdwhddls/Homecinema)** | AI 홈시네마 음향 자동 최적화 (POSCO AI Academy 32nd C4) | PyTorch · ViT · ResNet · PANNs · X-CLIP |
+| **[실시간 딥보이스 탐지 서비스](https://github.com/wjdwhddls/deepfake_detection_service_application)** | WebRTC 통화 중 음성 위변조를 실시간 판별하는 모바일 풀스택 서비스 | React Native · WebRTC · NestJS · PyTorch Mobile |
+| **[Bigdata Ecommerce Platform](https://github.com/wjdwhddls/Bigdata)** | 새벽배송 RFM/추천/예측 + React 대시보드 | Python · pandas · React 19 · Recharts |
 
 ---
 
-## 📂 프로젝트 구조 | Project Structure
+## 🛠️ Tech Stack (사이트 자체)
+
+- **Framework**: [Astro 4](https://astro.build) — 정적 사이트 생성, 컴포넌트 분리, JS는 필요한 곳에만 hydrate
+- **Styling**: Tailwind CSS 3 + CSS 변수 토큰 시스템 (`src/styles/tokens.css`)
+- **Language**: TypeScript (strict)
+- **Fonts**: Noto Sans KR, JetBrains Mono (Google Fonts)
+- **Hosting**: GitHub Pages (자동 배포 via GitHub Actions)
+
+### 인터랙션 특징
+
+- 🌌 Canvas 2D 파티클 배경 (요소 60개, 120px 거리 라인 연결)
+- ⌨️ 타이핑 효과 (`Multimodal AI` → `Deep Learning` → ...)
+- 🎴 3D 카드 틸트 (마우스 위치 기반 perspective rotate)
+- 🧲 자기장 버튼 + 리플 효과
+- 🪟 글래스모피즘 UI
+- 📊 스크롤 진행 바 + 패럴렉스 blob
+- ♿ `prefers-reduced-motion` 완전 대응
+
+---
+
+## 📂 디렉토리 구조
 
 ```
 my_portfolio_site/
-├── index.html          # 메인 HTML 파일
-├── styles.css          # 커스텀 CSS 스타일
-├── main.js             # JavaScript 로직 및 애니메이션
-└── README.md           # 프로젝트 설명서
+├── src/
+│   ├── pages/index.astro         # 메인 1-pager
+│   ├── layouts/BaseLayout.astro  # HTML shell, meta/OG/JSON-LD
+│   ├── components/               # 정적 컴포넌트
+│   │   ├── Hero.astro / About.astro / Projects.astro …
+│   │   └── client/               # 클라이언트 JS 컴포넌트
+│   ├── data/                     # profile/skills/projects/timeline (단일 진실 출처)
+│   ├── scripts/interactions.ts   # 글로벌 인터랙션 (스크롤·메뉴·옵저버)
+│   └── styles/                   # tokens.css + global.css
+├── public/                       # favicon, og-image, resume.pdf (예정)
+├── legacy/                       # 마이그레이션 이전 vanilla 백업
+├── astro.config.mjs
+├── tailwind.config.mjs
+└── package.json
 ```
 
 ---
 
-## 🎨 사이트 구성 | Site Sections
+## 🚀 빠른 시작
 
-### 🏠 Home (Hero)
-- 매력적인 환영 섹션
-- 파티클 배경 애니메이션
-- 타이핑 효과를 통한 자기소개
-- CTA(Call To Action) 버튼
-
-### 👤 About
-- 개인 소개 및 경력 정보
-- 기술 스택 및 핵심 기술
-- 프로파일 이미지
-
-### 🚀 Projects
-- 프로젝트 포트폴리오
-- 프로젝트 카드 (3D 틸트 효과)
-- 기술 스택 태그
-- 외부 링크 (GitHub, Demo)
-
-### 📞 Contact
-- 연락처 정보
-- 소셜 미디어 링크
-- 연락 폼
-- 위치 정보
-
----
-
-## 🚀 빠른 시작 | Quick Start
-
-### 1️⃣ 파일 구조 확인
-모든 파일(`index.html`, `styles.css`, `main.js`)이 같은 디렉토리에 있는지 확인하세요.
-
-### 2️⃣ 브라우저에서 열기
 ```bash
-# 간단한 방법: 직접 HTML 파일 열기
-open index.html
+# 1) 의존성 설치
+npm install
 
-# 또는 로컬 서버 사용 (권장)
-python3 -m http.server 8000
-# 그 다음 브라우저에서 http://localhost:8000 접속
+# 2) 로컬 개발 서버 (http://localhost:4321)
+npm run dev
+
+# 3) 프로덕션 빌드
+npm run build
+
+# 4) 빌드 결과 미리보기
+npm run preview
 ```
 
-### 3️⃣ 커스터마이징
-- `index.html`: 개인 정보, 프로젝트 내용 수정
-- `styles.css`: 색상, 폰트, 레이아웃 조정
-- `main.js`: 애니메이션 속도, 효과 커스터마이징
+### 콘텐츠 수정 위치
+
+- 인물 정보(이름, 이메일, GitHub 등): `src/data/profile.ts`
+- 기술 스택: `src/data/skills.ts`
+- 프로젝트: `src/data/projects.ts`
+- 경력/활동: `src/data/timeline.ts`
+- 색상 토큰: `src/styles/tokens.css`
+
+### 연락 폼 활성화 (Formspree)
+
+1. [Formspree](https://formspree.io)에서 폼 생성 → endpoint URL 발급
+2. 프로젝트 루트에 `.env`를 만들고 다음 한 줄 추가:
+   ```
+   PUBLIC_FORMSPREE_ENDPOINT=https://formspree.io/f/XXXXXXXX
+   ```
+3. 미설정 시 폼은 `mailto:` fallback으로 동작
 
 ---
 
-## 📋 브라우저 호환성 | Browser Compatibility
+## 📦 배포 (GitHub Pages)
 
-| Browser | Support |
-|---------|---------|
-| Chrome | ✅ 최신 버전 |
-| Firefox | ✅ 최신 버전 |
-| Safari | ✅ 최신 버전 |
-| Edge | ✅ 최신 버전 |
-| IE 11 | ❌ 지원 불가 |
+본 저장소는 `main` 브랜치에 push 시 GitHub Actions(`.github/workflows/deploy.yml`)가 자동으로 빌드하고 `gh-pages` 환경에 배포합니다.
+
+설정 확인:
+- `astro.config.mjs`의 `site` / `base` 값이 GitHub Pages URL과 일치하는지
+- Repository Settings → Pages → Source: **GitHub Actions** 선택
 
 ---
 
-## 🎯 배포 | Deployment
+## ♿ 접근성·SEO
 
-### GitHub Pages
-이 사이트는 GitHub Pages로 호스팅되고 있습니다.
-
-**Live URL**: https://wjdwhddls.github.io/my-portfolio/
-
-### 자신의 GitHub Pages에 배포하기
-1. GitHub 저장소 생성 (`username.github.io` 또는 프로젝트 이름)
-2. 파일 업로드
-3. Settings → Pages에서 배포 설정
-4. 자동 배포 또는 수동 푸시
+- `<html lang="ko">` 명시
+- `prefers-reduced-motion: reduce` 대응 — 파티클·타이핑·자기장 효과 자동 비활성
+- `:focus-visible` 키보드 포커스 링
+- 모바일 메뉴 `aria-expanded` 동기화
+- JSON-LD `@type: Person` 구조화 데이터
+- Open Graph / Twitter Card meta 일괄 주입
+- favicon.svg + og-image.svg (1200×630)
 
 ---
 
-## 📖 커스터마이징 가이드 | Customization Guide
+## 📧 Contact
 
-### 색상 변경
-`styles.css`에서 CSS 변수 수정:
-```css
-:root {
-  --primary: #your-color;
-  --secondary: #your-color;
-  /* ... */
-}
-```
-
-### 폰트 변경
-`index.html`의 Google Fonts 링크 수정:
-```html
-<link href="https://fonts.googleapis.com/css2?family=Your+Font" rel="stylesheet">
-```
-
-### 파티클 효과 조정
-`main.js`에서 파티클 설정 수정:
-```javascript
-const particleCount = 100; // 입자 개수
-const particleSpeed = 0.5; // 속도
-```
+- **Email**: bfpark99@naver.com
+- **GitHub**: [@wjdwhddls](https://github.com/wjdwhddls)
+- **Blog**: [jjong0425.tistory.com](https://jjong0425.tistory.com)
 
 ---
 
-## 📝 라이선스 | License
+## 📝 License
 
-이 프로젝트는 MIT 라이선스 하에 배포됩니다.
-
----
-
-## 👨‍💻 작가 | Author
-
-**Jeong Jong-in (정종인)**
-
-- GitHub: [@wjdwhddls](https://github.com/wjdwhddls)
-- Portfolio: [https://wjdwhddls.github.io/my-portfolio/](https://wjdwhddls.github.io/my-portfolio/)
+MIT License — 자유롭게 참고하셔도 좋습니다.
 
 ---
 
-## 📧 문의 | Contact
-
-질문이나 제안이 있으신가요?
-- GitHub Issues를 통해 버그 보고
-- 포트폴리오 사이트의 Contact 섹션으로 연락
-
----
-
-## 🙏 감사의 말 | Credits
-
-- Canvas API & Web Animation 참고 자료
-- TailwindCSS 문서
-- Google Fonts
-
----
-
-**Last Updated**: 2026-03-05
-**Made with ❤️ by Jeong Jong-in**
+**Made with ❤️ by Jeong Jong-in** · _Last refreshed_: 2026-05-11

@@ -1,0 +1,174 @@
+---
+/**
+ * Contact — 이메일/GitHub/블로그 카드 + 연락 폼.
+ * 폼은 Formspree 무료 플랜 사용을 전제로 action URL을 환경 변수에서 받음.
+ *   PUBLIC_FORMSPREE_ENDPOINT가 설정되어 있으면 그 값으로, 없으면 mailto fallback.
+ */
+import { profile, links } from '../data/profile';
+import MagneticButton from './client/MagneticButton.astro';
+
+const formspreeEndpoint = import.meta.env.PUBLIC_FORMSPREE_ENDPOINT as string | undefined;
+const formAction = formspreeEndpoint ?? `mailto:${profile.email}`;
+const formMethod = formspreeEndpoint ? 'POST' : 'GET';
+---
+
+<section id="contact" class="py-16 md:py-24 relative dot-pattern">
+  <div class="absolute inset-0 bg-bg/90"></div>
+
+  <div class="max-w-6xl mx-auto px-4 space-y-16 relative z-10">
+    <div class="text-center space-y-4 fade-in-up">
+      <h2 class="text-4xl md:text-5xl font-bold">
+        <span class="gradient-text">Contact</span>
+      </h2>
+      <p class="text-ink-muted max-w-2xl mx-auto">
+        함께 만들고 싶은 프로젝트가 있거나 협업·채용 관련 문의는 언제든지 연락 주세요.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-12 items-start max-w-4xl mx-auto">
+      <!-- 연락처 카드들 -->
+      <div class="space-y-4 fade-in-up" style="animation-delay: 0.1s;">
+        <div class="glass-card rounded-xl p-6 space-y-2">
+          <h3 class="font-bold text-lg">📧 Email</h3>
+          <a
+            href={links.mailto}
+            class="text-primary-hover hover:text-primary transition-colors break-all"
+          >
+            {profile.email}
+          </a>
+        </div>
+
+        <div class="glass-card rounded-xl p-6 space-y-2">
+          <h3 class="font-bold text-lg">💻 GitHub</h3>
+          <a
+            href={links.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary-hover hover:text-primary transition-colors"
+          >
+            @{profile.githubHandle}
+          </a>
+          <p class="text-xs text-ink-subtle">{profile.bio}</p>
+        </div>
+
+        <div class="glass-card rounded-xl p-6 space-y-2">
+          <h3 class="font-bold text-lg">📝 Tech Blog</h3>
+          <a
+            href={links.tistory}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary-hover hover:text-primary transition-colors"
+          >
+            {profile.blogTistory}.tistory.com
+          </a>
+        </div>
+      </div>
+
+      <!-- 연락 폼 -->
+      <form
+        id="contact-form"
+        class="space-y-4 fade-in-up"
+        style="animation-delay: 0.2s;"
+        action={formAction}
+        method={formMethod}
+      >
+        <div>
+          <label for="name" class="block text-sm font-medium mb-2">이름</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            required
+            autocomplete="name"
+            class="input-glow w-full glass-card rounded-xl px-4 py-3 text-ink placeholder-ink-subtle focus:border-primary focus:outline-none transition-all"
+            placeholder="이름을 입력하세요"
+          />
+        </div>
+
+        <div>
+          <label for="email" class="block text-sm font-medium mb-2">이메일</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            autocomplete="email"
+            class="input-glow w-full glass-card rounded-xl px-4 py-3 text-ink placeholder-ink-subtle focus:border-primary focus:outline-none transition-all"
+            placeholder="회신받을 이메일"
+          />
+        </div>
+
+        <div>
+          <label for="message" class="block text-sm font-medium mb-2">메시지</label>
+          <textarea
+            id="message"
+            name="message"
+            required
+            rows="4"
+            class="input-glow w-full glass-card rounded-xl px-4 py-3 text-ink placeholder-ink-subtle focus:border-primary focus:outline-none transition-all resize-none"
+            placeholder="메시지를 입력해주세요"
+          ></textarea>
+        </div>
+
+        <button
+          type="submit"
+          class="magnetic-btn btn-ripple w-full bg-primary hover:bg-primary-hover text-bg font-bold py-3 rounded-xl transition-all hover:shadow-lg hover:shadow-primary/25"
+        >
+          메시지 보내기
+        </button>
+
+        <p
+          id="form-feedback"
+          class="text-sm text-center text-ink-muted min-h-[1.25rem]"
+          aria-live="polite"
+        ></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- 자기장 버튼 인터랙션 마운트 -->
+  <MagneticButton />
+</section>
+
+<script>
+  /**
+   * 폼 제출 처리.
+   * - Formspree endpoint(POST)면 fetch로 비동기 전송
+   * - mailto면 기본 동작에 맡김
+   */
+  const form = document.getElementById('contact-form') as HTMLFormElement | null;
+  const feedback = document.getElementById('form-feedback');
+
+  if (form && feedback) {
+    form.addEventListener('submit', async (e) => {
+      const action = form.getAttribute('action') ?? '';
+      if (!action.startsWith('http')) {
+        // mailto fallback — 기본 동작 허용
+        return;
+      }
+
+      e.preventDefault();
+      feedback.textContent = '전송 중...';
+      feedback.style.color = '';
+
+      const data = new FormData(form);
+      try {
+        const res = await fetch(action, {
+          method: 'POST',
+          body: data,
+          headers: { Accept: 'application/json' },
+        });
+        if (res.ok) {
+          feedback.textContent = '메시지가 전송되었습니다. 곧 회신드릴게요!';
+          feedback.style.color = 'rgb(52 211 153)';
+          form.reset();
+        } else {
+          throw new Error(`HTTP ${res.status}`);
+        }
+      } catch (err) {
+        feedback.textContent = '전송에 실패했습니다. 잠시 후 다시 시도해주세요.';
+        feedback.style.color = 'rgb(248 113 113)';
+      }
+    });
+  }
+</script>

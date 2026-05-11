@@ -1,0 +1,65 @@
+---
+/**
+ * 타이핑 효과 — 전달받은 phrases를 순환하며 타자/지우기 애니메이션.
+ * - prefers-reduced-motion 시 첫 phrase만 정적으로 노출.
+ */
+export interface Props {
+  phrases: string[];
+}
+
+const { phrases } = Astro.props;
+const initial = phrases[0] ?? '';
+---
+
+<span class="typing-text" id="typing-text" data-phrases={JSON.stringify(phrases)}>
+  {initial}
+</span>
+
+<script>
+  const el = document.getElementById('typing-text');
+  if (el) {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduceMotion) {
+      let phrases: string[] = [];
+      try {
+        phrases = JSON.parse(el.dataset.phrases ?? '[]');
+      } catch {
+        phrases = [];
+      }
+
+      if (phrases.length > 0) {
+        const typingSpeed = 100;
+        const erasingSpeed = 50;
+        const delayBetween = 2000;
+        let roleIndex = 0;
+        let charIndex = phrases[0].length;
+
+        const type = () => {
+          const current = phrases[roleIndex];
+          if (charIndex < current.length) {
+            el.textContent = current.substring(0, charIndex + 1);
+            charIndex++;
+            setTimeout(type, typingSpeed);
+          } else {
+            setTimeout(erase, delayBetween);
+          }
+        };
+
+        const erase = () => {
+          const current = phrases[roleIndex];
+          if (charIndex > 0) {
+            el.textContent = current.substring(0, charIndex - 1);
+            charIndex--;
+            setTimeout(erase, erasingSpeed);
+          } else {
+            roleIndex = (roleIndex + 1) % phrases.length;
+            setTimeout(type, 500);
+          }
+        };
+
+        // 초기 phrase는 완성된 상태로 노출되어 있으니, 잠시 대기 후 다음 단계로
+        setTimeout(erase, delayBetween);
+      }
+    }
+  }
+</script>

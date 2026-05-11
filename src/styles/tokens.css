@@ -1,0 +1,47 @@
+/**
+ * 디자인 토큰 — 색상은 R G B 트리플로 저장해 Tailwind의 `<alpha-value>`와 호환.
+ * 분위기는 legacy 사이트의 Indigo + Purple 다크 톤을 유지하되, 모든 hex 하드코딩을 토큰으로 통합.
+ */
+:root {
+  /* 배경 단계 */
+  --color-bg: 15 23 42;            /* slate-900  #0f172a */
+  --color-bg-elevated: 30 41 59;   /* slate-800  #1e293b */
+  --color-surface: 17 24 39;       /* near-slate */
+
+  /* 주조색 */
+  --color-primary: 99 102 241;        /* indigo-500 #6366f1 */
+  --color-primary-hover: 129 140 248; /* indigo-400 #818cf8 */
+  --color-accent: 167 139 250;        /* violet-400 #a78bfa */
+
+  /* 텍스트 */
+  --color-ink: 241 245 249;        /* slate-50   #f1f5f9 */
+  --color-ink-muted: 148 163 184;  /* slate-400  #94a3b8 */
+  --color-ink-subtle: 100 116 139; /* slate-500  #64748b */
+
+  /* 보더 */
+  --color-border: 51 65 85;        /* slate-700  #334155 */
+
+  /* 글래스 효과 */
+  --glass-bg: rgba(30, 41, 59, 0.6);
+  --glass-bg-strong: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(99, 102, 241, 0.15);
+  --glass-border-strong: rgba(99, 102, 241, 0.4);
+  --glass-blur: 12px;
+
+  /* 그라데이션 */
+  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #a78bfa 50%, #6366f1 100%);
+  --gradient-progress: linear-gradient(90deg, #6366f1, #a78bfa, #6366f1);
+  --gradient-border: linear-gradient(45deg, #6366f1, #a78bfa, #6366f1, #818cf8);
+  --gradient-line: linear-gradient(90deg, #6366f1, #a78bfa);
+
+  /* 그림자 */
+  --shadow-glow-primary: 0 0 20px rgba(99, 102, 241, 0.3);
+  --shadow-card-hover: 0 25px 50px rgba(99, 102, 241, 0.15);
+  --shadow-card-rise: 0 10px 30px -10px rgba(99, 102, 241, 0.25);
+
+  /* 모션 */
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 0.2s;
+  --duration-base: 0.3s;
+  --duration-slow: 0.5s;
+}

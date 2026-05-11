@@ -1,0 +1,111 @@
+---
+/**
+ * 사이트 전역 레이아웃 — 모든 페이지가 이 레이아웃을 통해 렌더링된다.
+ * - meta description / Open Graph / Twitter Card / JSON-LD Person 일괄 주입
+ * - Noto Sans KR 폰트 preconnect + preload
+ * - 글로벌 CSS(글래스, 그라데이션, 토큰) 로드
+ * - 스크롤 진행 바, 커서 글로우 등 글로벌 오버레이 마운트
+ */
+import '../styles/global.css';
+import { profile, links } from '../data/profile';
+
+export interface Props {
+  /** 페이지 타이틀 (없으면 기본 사용) */
+  title?: string;
+  /** 페이지 description (없으면 기본 사용) */
+  description?: string;
+}
+
+const {
+  title = `${profile.name} (${profile.nameEn}) — ${profile.tagline}`,
+  description = profile.intro,
+} = Astro.props;
+
+const canonical = profile.siteUrl;
+const ogImage = `${canonical.replace(/\/$/, '')}/og-image.svg`;
+
+// JSON-LD Person 구조화 데이터 — 검색엔진이 인물 정보를 정확히 인식하도록
+const personJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: profile.name,
+  alternateName: profile.nameEn,
+  description: profile.intro,
+  email: profile.email,
+  url: canonical,
+  sameAs: [links.github, links.tistory],
+  jobTitle: profile.tagline,
+  knowsAbout: [
+    'AI Engineering',
+    'Deep Learning',
+    'Multimodal AI',
+    'Backend Development',
+    'PyTorch',
+    'TypeScript',
+    'Python',
+  ],
+};
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <!-- Favicon (JJ 모노그램 SVG) -->
+    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:type" content={profile.ogImageType} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:site_name" content={`${profile.name} Portfolio`} />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- 폰트 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- JSON-LD -->
+    <script type="application/ld+json" set:html={JSON.stringify(personJsonLd)} />
+
+    <!-- 테마 색상 (모바일 브라우저 상단 바) -->
+    <meta name="theme-color" content="#0f172a" />
+  </head>
+
+  <body class="bg-bg text-ink">
+    <!-- 스크롤 진행 바 -->
+    <div id="scroll-progress" aria-hidden="true"></div>
+
+    <!-- 커서 글로우 (데스크톱 전용) -->
+    <div id="cursor-glow" class="hidden md:block" aria-hidden="true"></div>
+
+    <slot />
+
+    <!-- 글로벌 인터랙션 스크립트 (스크롤 진행, navbar glass, scroll-top 등) -->
+    <script>
+      import '../scripts/interactions.ts';
+    </script>
+  </body>
+</html>

@@ -1,0 +1,52 @@
+---
+/**
+ * 신규 섹션: "What I Do"
+ * AI Engineering / Backend Architecture / Data-driven Engineering 세 가지 핵심 영역을
+ * 한 줄로 어필하기 위한 카드 3개.
+ */
+const items = [
+  {
+    icon: '🧠',
+    title: 'AI Engineering',
+    body: 'PyTorch 기반 멀티모달 모델 설계·학습·추론 파이프라인. ViT/ResNet/PANNs 등 비전·오디오·언어 모델 통합 경험.',
+  },
+  {
+    icon: '🛠️',
+    title: 'Backend Architecture',
+    body: 'TypeScript(NestJS·Node.js)로 분석·추론 결과를 안정적으로 서빙. 모델·서비스·클라이언트를 잇는 API 설계.',
+  },
+  {
+    icon: '📊',
+    title: 'Data-driven Engineering',
+    body: 'pandas·scikit-learn으로 RFM·연관규칙·회귀/RF 모델링. 인사이트를 React 대시보드까지 매끄럽게 연결.',
+  },
+];
+---
+
+<section id="what-i-do" class="py-16 md:py-24 relative">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="text-center space-y-4 mb-12 fade-in-up">
+      <h2 class="text-3xl md:text-4xl font-bold">
+        <span class="gradient-text">What I Do</span>
+      </h2>
+      <p class="text-ink-muted max-w-2xl mx-auto">
+        세 가지 축으로 실세계 문제를 풉니다.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6">
+      {
+        items.map((item, i) => (
+          <div
+            class="glass-card rounded-2xl p-6 space-y-3 fade-in-up"
+            style={`animation-delay: ${0.1 * (i + 1)}s;`}
+          >
+            <div class="text-4xl">{item.icon}</div>
+            <h3 class="text-xl font-bold">{item.title}</h3>
+            <p class="text-ink-muted text-sm leading-relaxed">{item.body}</p>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

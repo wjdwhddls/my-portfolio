@@ -1,0 +1,94 @@
+---
+/**
+ * 프로젝트 카드 — projects.ts의 단일 Project를 받아 렌더.
+ * - 3D 틸트는 data-tilt 속성 + CardTilt 클라이언트 스크립트에서 처리
+ * - gradient border + glass card 디자인 유지
+ * - 링크가 여러 개일 수 있으므로 칩 형태로 노출
+ */
+import type { Project } from '../data/projects';
+
+export interface Props {
+  project: Project;
+  delay?: number;
+}
+
+const { project, delay = 0 } = Astro.props;
+const animDelay = `${delay}s`;
+---
+
+<div
+  class="card-3d gradient-border glass-card rounded-2xl overflow-hidden fade-in-up"
+  style={`animation-delay: ${animDelay};`}
+  data-tilt
+>
+  <!-- 상단 비주얼 -->
+  <div class="h-48 bg-gradient-to-br from-primary/20 to-accent/20 relative overflow-hidden dot-pattern">
+    <div class="absolute inset-0 bg-bg/50"></div>
+    <div class="absolute inset-0 flex items-center justify-center">
+      <div class="text-6xl opacity-60">{project.emoji}</div>
+    </div>
+    {
+      project.context && (
+        <div class="absolute top-3 right-3 bg-bg/70 backdrop-blur-sm border border-border rounded-full px-3 py-1 text-xs text-ink-muted">
+          {project.context}
+        </div>
+      )
+    }
+  </div>
+
+  <!-- 본문 -->
+  <div class="p-6 space-y-4">
+    <div class="space-y-1">
+      <h3 class="text-xl font-bold leading-tight">{project.title}</h3>
+      <p class="text-xs text-primary-hover">{project.role}</p>
+    </div>
+
+    <p class="text-ink-muted text-sm leading-relaxed">{project.summary}</p>
+
+    <!-- 하이라이트 -->
+    {
+      project.highlights.length > 0 && (
+        <ul class="space-y-1.5 text-xs text-ink-muted">
+          {project.highlights.map((h) => (
+            <li class="flex gap-2">
+              <span class="text-primary-hover shrink-0">▸</span>
+              <span class="leading-relaxed">{h}</span>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    <!-- 기술 스택 칩 -->
+    <div class="flex flex-wrap gap-2">
+      {
+        project.stack.map((s) => (
+          <span class="bg-primary/10 text-primary-hover text-xs px-3 py-1 rounded-full border border-primary/20">
+            {s}
+          </span>
+        ))
+      }
+    </div>
+
+    <!-- 링크 -->
+    <div class="flex flex-wrap gap-2 pt-2">
+      {
+        project.links.map((link, i) => (
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class:list={[
+              'btn-ripple text-center py-2 px-4 rounded-lg text-xs font-medium transition-colors',
+              i === 0
+                ? 'bg-primary hover:bg-primary-hover'
+                : 'border border-primary text-primary-hover hover:bg-primary/10',
+            ]}
+          >
+            {link.label}
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</div>

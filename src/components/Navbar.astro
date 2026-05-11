@@ -1,0 +1,58 @@
+---
+/**
+ * 고정 헤더 네비게이션.
+ * - 데스크톱: 4개 링크 + 호버 라인 애니메이션
+ * - 모바일: 햄버거 → 드롭다운 (aria-expanded 동기화는 클라이언트 스크립트에서)
+ * - 스크롤 시 glass 효과는 interactions.ts에서 토글
+ */
+const navItems = [
+  { href: '#home', label: '홈' },
+  { href: '#about', label: '소개' },
+  { href: '#projects', label: '프로젝트' },
+  { href: '#contact', label: '연락처' },
+];
+---
+
+<nav
+  id="navbar"
+  class="fixed top-0 w-full z-50 transition-all duration-300"
+  aria-label="주요 네비게이션"
+>
+  <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+    <a href="#home" class="text-2xl font-bold gradient-text" aria-label="홈으로">
+      JJ
+    </a>
+
+    <div class="hidden md:flex gap-8">
+      {
+        navItems.map((item, i) => (
+          <a
+            href={item.href}
+            class:list={['nav-link', { active: i === 0 }]}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </div>
+
+    <button
+      id="mobile-menu-btn"
+      class="md:hidden text-ink text-2xl"
+      aria-label="메뉴 열기"
+      aria-expanded="false"
+      aria-controls="mobile-menu"
+    >
+      ☰
+    </button>
+  </div>
+
+  <div
+    id="mobile-menu"
+    class="hidden md:hidden glass border-t border-border"
+  >
+    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col gap-4">
+      {navItems.map((item) => <a href={item.href} class="nav-link">{item.label}</a>)}
+    </div>
+  </div>
+</nav>

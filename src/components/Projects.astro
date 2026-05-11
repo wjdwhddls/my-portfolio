@@ -1,0 +1,33 @@
+---
+/**
+ * Projects 섹션 — projects.ts 데이터 기반으로 카드 렌더.
+ * 더 이상 HTML에 카드 정보가 박혀있지 않음(데이터-뷰 분리).
+ */
+import { projects } from '../data/projects';
+import ProjectCard from './ProjectCard.astro';
+import CardTilt from './client/CardTilt.astro';
+---
+
+<section id="projects" class="py-16 md:py-24 relative">
+  <div class="max-w-6xl mx-auto px-4 space-y-12">
+    <div class="text-center space-y-4 fade-in-up">
+      <h2 class="text-4xl md:text-5xl font-bold">
+        <span class="gradient-text">Projects</span>
+      </h2>
+      <p class="text-ink-muted max-w-2xl mx-auto">
+        AI 모델링·백엔드·데이터 분석을 가로지르는 실제 프로젝트들입니다. 모든 코드는 GitHub에서 공개되어 있어요.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {
+        projects.map((project, i) => (
+          <ProjectCard project={project} delay={0.1 * (i + 1)} />
+        ))
+      }
+    </div>
+  </div>
+
+  <!-- 카드 틸트 인터랙션 마운트 -->
+  <CardTilt />
+</section>
