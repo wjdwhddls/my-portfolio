@@ -8,6 +8,23 @@ export interface ProjectLink {
   url: string;
 }
 
+/** 가죽 팔레트 키 — bookshelf.ts의 leatherPalettes에 정의 */
+export type LeatherStyle = 'classic' | 'aged' | 'oxblood' | 'forest' | 'navy' | 'sand';
+
+/** 책장 UI에서 책의 시각 표현을 결정하는 메타. 카드 UI에는 영향 없음. */
+export interface ProjectBookMeta {
+  /** 가죽 팔레트 키. 미지정 시 index 기반 fallback */
+  leather?: LeatherStyle;
+  /** 책등 폭(px). 미지정 시 stack.length 기반 자동 계산 (clamp 56~92) */
+  spineWidth?: number;
+  /** 책등 짧은 제목. 미지정 시 title 사용 */
+  spineTitle?: string;
+  /** 책등 서브라벨. 미지정 시 context 사용 */
+  spineSubtitle?: string;
+  /** 표지에 양각으로 새길 짧은 모노그램. 미지정 시 emoji 사용 */
+  monogram?: string;
+}
+
 export interface Project {
   /** 카드 제목 */
   title: string;
@@ -27,6 +44,8 @@ export interface Project {
   links: ProjectLink[];
   /** 카테고리 태그 */
   tags: string[];
+  /** 책장 표현용 메타. 책장 컴포넌트에서만 사용, 카드 UI엔 영향 없음 */
+  book?: ProjectBookMeta;
 }
 
 export const projects: Project[] = [
@@ -48,6 +67,12 @@ export const projects: Project[] = [
       { label: 'GitHub', url: 'https://github.com/wjdwhddls/Homecinema' },
     ],
     tags: ['Multimodal AI', 'PyTorch', 'Computer Vision', 'Audio ML'],
+    book: {
+      leather: 'oxblood',
+      spineTitle: 'POFLIX',
+      spineSubtitle: '2026 · C4',
+      monogram: '🎬',
+    },
   },
   {
     title: '실시간 딥보이스 탐지 서비스',
@@ -79,6 +104,12 @@ export const projects: Project[] = [
       { label: 'AI Model', url: 'https://github.com/wjdwhddls/deepfake_detection_service_deepvoice' },
     ],
     tags: ['Real-time AI', 'Voice Anti-spoofing', 'WebRTC', 'NestJS', 'PyTorch'],
+    book: {
+      leather: 'navy',
+      spineTitle: 'DeepVoice',
+      spineSubtitle: '2025',
+      monogram: '🔒',
+    },
   },
   {
     title: '새벽배송 고객 분석 & 추천 플랫폼',
@@ -98,5 +129,11 @@ export const projects: Project[] = [
       { label: 'GitHub', url: 'https://github.com/wjdwhddls/Bigdata' },
     ],
     tags: ['Data Science', 'Recommendation', 'RFM', 'React', 'Python'],
+    book: {
+      leather: 'forest',
+      spineTitle: 'Bigdata',
+      spineSubtitle: 'Analytics',
+      monogram: '🛒',
+    },
   },
 ];

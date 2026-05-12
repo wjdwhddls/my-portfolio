@@ -1,0 +1,109 @@
+---
+/**
+ * 서재 씬 — 어두운 야간 분위기의 책상 + 우측 키 큰 책장.
+ *
+ * 좌측: 책상 + 노트북 + 화분 + 메모지 + 의자 + 데스크 램프 (스폿라이트)
+ * 우측: 키 큰 책장 (Bookshelf variant="study")
+ *
+ * 모든 소품은 순수 CSS로 그리며, 책장은 기존 Bookshelf 컴포넌트를 그대로 재사용한다.
+ */
+import type { Project } from '../data/projects';
+import Bookshelf from './Bookshelf.astro';
+
+export interface Props {
+  projects: Project[];
+}
+
+const { projects } = Astro.props;
+---
+
+<div class="study fade-in-up">
+  <!-- 룸 배경: 벽 + 천장 + 바닥 -->
+  <div class="study__wall" aria-hidden="true"></div>
+  <div class="study__ceiling" aria-hidden="true"></div>
+  <div class="study__floor" aria-hidden="true"></div>
+
+  <!-- 좌측: 책상씬 -->
+  <div class="study__desk-area" aria-hidden="true">
+    <!-- 천장 펜던트 램프 -->
+    <div class="study__lamp">
+      <div class="study__lamp-cord"></div>
+      <div class="study__lamp-shade"></div>
+      <div class="study__lamp-bulb"></div>
+    </div>
+    <!-- 빛 원뿔 — 책상까지 떨어짐 -->
+    <div class="study__light-cone"></div>
+    <!-- 책상 위 빛이 닿는 영역 -->
+    <div class="study__light-pool"></div>
+
+    <!-- 책상 -->
+    <div class="study__desk">
+      <div class="study__desk-top"></div>
+      <div class="study__desk-edge"></div>
+      <div class="study__desk-leg study__desk-leg--left"></div>
+      <div class="study__desk-leg study__desk-leg--right"></div>
+    </div>
+
+    <!-- 책상 위 소품들 -->
+    <!-- 노트북 -->
+    <div class="study__laptop">
+      <div class="study__laptop-screen">
+        <div class="study__laptop-glow"></div>
+      </div>
+      <div class="study__laptop-base"></div>
+    </div>
+
+    <!-- 화분 + 식물 -->
+    <div class="study__plant">
+      <div class="study__plant-leaves">
+        <span class="study__leaf study__leaf--1"></span>
+        <span class="study__leaf study__leaf--2"></span>
+        <span class="study__leaf study__leaf--3"></span>
+        <span class="study__leaf study__leaf--4"></span>
+        <span class="study__leaf study__leaf--5"></span>
+      </div>
+      <div class="study__plant-pot"></div>
+    </div>
+
+    <!-- 책 무더기 -->
+    <div class="study__stack">
+      <div class="study__stack-book study__stack-book--1"></div>
+      <div class="study__stack-book study__stack-book--2"></div>
+      <div class="study__stack-book study__stack-book--3"></div>
+    </div>
+
+    <!-- 메모지 -->
+    <div class="study__notepad">
+      <div class="study__notepad-line"></div>
+      <div class="study__notepad-line"></div>
+      <div class="study__notepad-line"></div>
+    </div>
+
+    <!-- 머그컵 -->
+    <div class="study__mug">
+      <div class="study__mug-steam">
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+
+    <!-- 의자 등받이 -->
+    <div class="study__chair">
+      <div class="study__chair-back"></div>
+      <div class="study__chair-arm"></div>
+    </div>
+  </div>
+
+  <!-- 우측: 키 큰 책장 -->
+  <div class="study__shelf-area">
+    <Bookshelf projects={projects} variant="study" />
+  </div>
+
+  <!-- 비넷(주변부 어두움) -->
+  <div class="study__vignette" aria-hidden="true"></div>
+
+  <!-- 힌트 -->
+  <p class="study__hint" aria-hidden="true">
+    💡 우측 책장의 책을 클릭하면 펼쳐집니다
+  </p>
+</div>

@@ -1,4 +1,6 @@
 @import './tokens.css';
+@import './bookshelf.css';
+@import './study-scene.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

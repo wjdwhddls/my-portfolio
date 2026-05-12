@@ -1,0 +1,78 @@
+---
+/**
+ * 책 펼침 모달 — <dialog> 시맨틱 + 별도 dim div(Safari backdrop-filter 우회).
+ * 콘텐츠 영역(.book-modal__page-content 자식들)은 비어있고,
+ * BookshelfController가 클릭된 책의 projects 데이터로 inject한다.
+ */
+---
+
+<dialog
+  id="book-modal"
+  class="book-modal"
+  aria-labelledby="book-modal-title"
+  aria-modal="true"
+>
+  <div class="book-modal__dim" aria-hidden="true"></div>
+
+  <div class="book-modal__stage" role="document">
+    <button
+      type="button"
+      class="book-modal__close"
+      aria-label="닫기"
+    >
+      <span aria-hidden="true">×</span>
+    </button>
+
+    <div class="book-modal__book">
+      <!-- 왼쪽 페이지 (정보) -->
+      <div class="book-modal__page book-modal__page--left">
+        <div class="book-modal__page-content" data-page="left">
+          <div class="book-modal__monogram" data-field="monogram"></div>
+          <div class="book-modal__role" data-field="role"></div>
+          <div class="book-modal__context" data-field="context"></div>
+          <div class="book-modal__divider" aria-hidden="true"></div>
+          <div class="book-modal__tags" data-field="tags"></div>
+        </div>
+      </div>
+
+      <!-- 오른쪽 페이지 (내용) -->
+      <div class="book-modal__page book-modal__page--right">
+        <div class="book-modal__page-content" data-page="right">
+          <h2 id="book-modal-title" class="book-modal__title" data-field="title"></h2>
+          <p class="book-modal__summary" data-field="summary"></p>
+          <ul class="book-modal__highlights" data-field="highlights"></ul>
+          <div class="book-modal__stack" data-field="stack"></div>
+          <div class="book-modal__links" data-field="links"></div>
+        </div>
+      </div>
+
+      <!-- 펼쳐지는 표지 (앞면=가죽, 뒷면=속표지) -->
+      <div class="book-modal__cover" aria-hidden="true">
+        <div class="book-modal__cover-face book-modal__cover-face--front">
+          <div class="book-modal__cover-title" data-field="cover-title"></div>
+          <div class="book-modal__cover-band book-modal__cover-band--top"></div>
+          <div class="book-modal__cover-band book-modal__cover-band--bottom"></div>
+        </div>
+        <div class="book-modal__cover-face book-modal__cover-face--inside"></div>
+      </div>
+
+      <!-- 책 가운데 접힘선 -->
+      <div class="book-modal__gutter" aria-hidden="true"></div>
+    </div>
+  </div>
+</dialog>
+
+<style>
+  /* sr-only는 global에 없어 모달 내에서만 정의 */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

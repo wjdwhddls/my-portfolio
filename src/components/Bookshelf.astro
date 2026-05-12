@@ -1,0 +1,67 @@
+---
+/**
+ * 책장 — 프로젝트 배열을 단(shelf)별로 분할해 Book들을 렌더링.
+ *
+ * variant:
+ *  - 'default' : 가로로 넓은 단독 책장 (한 단 6권까지)
+ *  - 'study'   : 키 큰 사이드 책장 (한 단 1~3권, 듬성듬성). 서재 씬용
+ */
+import type { Project } from '../data/projects';
+import { chunkIntoShelves, distributeForStudy } from '../data/bookshelf';
+import Book from './Book.astro';
+import BookModal from './BookModal.astro';
+import BookshelfController from './client/BookshelfController.astro';
+
+export interface Props {
+  projects: Project[];
+  variant?: 'default' | 'study';
+}
+
+const { projects, variant = 'default' } = Astro.props;
+const shelves = variant === 'study' ? distributeForStudy(projects) : chunkIntoShelves(projects);
+const isStudy = variant === 'study';
+
+const wrapClass = ['bookshelf-wrap', isStudy && 'bookshelf-wrap--study']
+  .filter(Boolean)
+  .join(' ');
+const shelfClass = ['bookshelf', isStudy && 'bookshelf--study'].filter(Boolean).join(' ');
+---
+
+<div class={wrapClass}>
+  <div
+    class={shelfClass}
+    role="region"
+    aria-label="프로젝트 책장 — 책을 클릭하면 펼쳐서 상세를 볼 수 있습니다"
+  >
+    <div class="bookshelf__top" aria-hidden="true"></div>
+    <div class="bookshelf__side bookshelf__side--left" aria-hidden="true"></div>
+    <div class="bookshelf__side bookshelf__side--right" aria-hidden="true"></div>
+
+    <div class="bookshelf__inner">
+      {shelves.map((shelfBooks, sIdx) => {
+        const baseIdx = shelves.slice(0, sIdx).reduce((acc, s) => acc + s.length, 0);
+        return (
+          <div class="bookshelf__shelf" data-shelf-index={sIdx}>
+            <div class="bookshelf__books">
+              {shelfBooks.map((p, idx) => (
+                <Book project={p} index={baseIdx + idx} />
+              ))}
+            </div>
+            <div class="bookshelf__plank" aria-hidden="true"></div>
+          </div>
+        );
+      })}
+    </div>
+
+    {!isStudy && <div class="bookshelf__floor-shadow" aria-hidden="true"></div>}
+  </div>
+
+  {!isStudy && (
+    <p class="bookshelf-hint" aria-hidden="true">
+      📖 책을 클릭하면 펼쳐집니다
+    </p>
+  )}
+</div>
+
+<BookModal />
+<BookshelfController projects={projects} />

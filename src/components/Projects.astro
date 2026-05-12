@@ -1,11 +1,13 @@
 ---
 /**
- * Projects 섹션 — projects.ts 데이터 기반으로 카드 렌더.
- * 더 이상 HTML에 카드 정보가 박혀있지 않음(데이터-뷰 분리).
+ * Projects 섹션 — projects.ts 데이터 기반.
+ * 데스크톱(≥768px)에서는 사실적 야간 서재 씬(좌측 책상 + 우측 책장),
+ * 모바일에서는 기존 카드 그리드.
  */
 import { projects } from '../data/projects';
 import ProjectCard from './ProjectCard.astro';
 import CardTilt from './client/CardTilt.astro';
+import StudyScene from './StudyScene.astro';
 ---
 
 <section id="projects" class="py-16 md:py-24 relative">
@@ -19,15 +21,20 @@ import CardTilt from './client/CardTilt.astro';
       </p>
     </div>
 
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <!-- 모바일: 기존 카드 그리드 -->
+    <div class="grid sm:grid-cols-2 gap-8 md:hidden">
       {
         projects.map((project, i) => (
           <ProjectCard project={project} delay={0.1 * (i + 1)} />
         ))
       }
     </div>
+
+    <!-- 데스크톱: 야간 서재 씬 -->
+    <div class="hidden md:block">
+      <StudyScene projects={projects} />
+    </div>
   </div>
 
-  <!-- 카드 틸트 인터랙션 마운트 -->
   <CardTilt />
 </section>
