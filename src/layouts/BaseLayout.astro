@@ -91,7 +91,7 @@ const personJsonLd = {
     <script type="application/ld+json" set:html={JSON.stringify(personJsonLd)} />
 
     <!-- 테마 색상 (모바일 브라우저 상단 바) -->
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="theme-color" content="#000000" />
   </head>
 
   <body class="bg-bg text-ink">
@@ -106,6 +106,7 @@ const personJsonLd = {
     <!-- 글로벌 인터랙션 스크립트 (스크롤 진행, navbar glass, scroll-top 등) -->
     <script>
       import '../scripts/interactions.ts';
+      import '../scripts/scroll-runtime.ts';
     </script>
   </body>
 </html>

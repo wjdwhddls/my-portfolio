@@ -29,10 +29,18 @@ import StudyScene from './StudyScene.astro';
         ))
       }
     </div>
+  </div>
 
-    <!-- 데스크톱: 야간 서재 씬 -->
-    <div class="hidden md:block">
-      <StudyScene projects={projects} />
+  <!-- 데스크톱: 풀 뷰포트 sticky pin 룸. max-w 컨테이너 밖에 두어
+       100vw 를 차지하고 스크롤 시 viewport 에 고정된다. -->
+  <div class="hidden md:block">
+    <div id="cinema-section" class="cinema-section">
+      <div class="cinema-pin">
+        <div class="cinema-stage">
+          <StudyScene projects={projects} />
+        </div>
+        <div class="cinema-vignette" aria-hidden="true"></div>
+      </div>
     </div>
   </div>
 

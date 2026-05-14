@@ -1,43 +1,44 @@
 /**
- * 디자인 토큰 — 색상은 R G B 트리플로 저장해 Tailwind의 `<alpha-value>`와 호환.
- * 분위기는 legacy 사이트의 Indigo + Purple 다크 톤을 유지하되, 모든 hex 하드코딩을 토큰으로 통합.
+ * 디자인 토큰 — 순수 흑백 모노크롬(Vercel/Linear 스타일).
+ * 색상은 R G B 트리플로 저장해 Tailwind의 `<alpha-value>`와 호환.
+ * 인디고/바이올렛 액센트를 모두 그레이스케일로 환원했다.
  */
 :root {
   /* 배경 단계 */
-  --color-bg: 15 23 42;            /* slate-900  #0f172a */
-  --color-bg-elevated: 30 41 59;   /* slate-800  #1e293b */
-  --color-surface: 17 24 39;       /* near-slate */
+  --color-bg: 0 0 0;               /* #000000  순수 검정 */
+  --color-bg-elevated: 18 18 18;   /* #121212  카드/네브 */
+  --color-surface: 10 10 10;       /* #0a0a0a  footer 등 */
 
-  /* 주조색 */
-  --color-primary: 99 102 241;        /* indigo-500 #6366f1 */
-  --color-primary-hover: 129 140 248; /* indigo-400 #818cf8 */
-  --color-accent: 167 139 250;        /* violet-400 #a78bfa */
+  /* 주조색 — 인디고 자리를 흰색으로 환원, 호버는 약간 죽임 */
+  --color-primary: 255 255 255;        /* #ffffff */
+  --color-primary-hover: 224 224 224;  /* #e0e0e0 */
+  --color-accent: 160 160 160;         /* #a0a0a0  보조 회색 */
 
-  /* 텍스트 */
-  --color-ink: 241 245 249;        /* slate-50   #f1f5f9 */
-  --color-ink-muted: 148 163 184;  /* slate-400  #94a3b8 */
-  --color-ink-subtle: 100 116 139; /* slate-500  #64748b */
+  /* 텍스트 위계 4단 (zinc 계열 활용) */
+  --color-ink: 255 255 255;        /* #ffffff  본문 */
+  --color-ink-muted: 161 161 170;  /* #a1a1aa  zinc-400 */
+  --color-ink-subtle: 113 113 122; /* #71717a  zinc-500 */
 
   /* 보더 */
-  --color-border: 51 65 85;        /* slate-700  #334155 */
+  --color-border: 39 39 42;        /* #27272a  zinc-800 */
 
-  /* 글래스 효과 */
-  --glass-bg: rgba(30, 41, 59, 0.6);
-  --glass-bg-strong: rgba(30, 41, 59, 0.7);
-  --glass-border: rgba(99, 102, 241, 0.15);
-  --glass-border-strong: rgba(99, 102, 241, 0.4);
-  --glass-blur: 12px;
+  /* 글래스 효과 — 색은 빼고 투명도/블러만 유지 */
+  --glass-bg: rgba(20, 20, 20, 0.6);
+  --glass-bg-strong: rgba(20, 20, 20, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-strong: rgba(255, 255, 255, 0.18);
+  --glass-blur: 14px;
 
-  /* 그라데이션 */
-  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #a78bfa 50%, #6366f1 100%);
-  --gradient-progress: linear-gradient(90deg, #6366f1, #a78bfa, #6366f1);
-  --gradient-border: linear-gradient(45deg, #6366f1, #a78bfa, #6366f1, #818cf8);
-  --gradient-line: linear-gradient(90deg, #6366f1, #a78bfa);
+  /* 그라데이션 — 모노톤 (흰↔회색 환원) */
+  --gradient-primary:  linear-gradient(135deg, #ffffff 0%, #a1a1aa 50%, #ffffff 100%);
+  --gradient-progress: linear-gradient(90deg,  #ffffff, #a1a1aa, #ffffff);
+  --gradient-border:   linear-gradient(45deg,  #ffffff, #71717a, #ffffff, #d4d4d8);
+  --gradient-line:     linear-gradient(90deg,  #ffffff, #a1a1aa);
 
-  /* 그림자 */
-  --shadow-glow-primary: 0 0 20px rgba(99, 102, 241, 0.3);
-  --shadow-card-hover: 0 25px 50px rgba(99, 102, 241, 0.15);
-  --shadow-card-rise: 0 10px 30px -10px rgba(99, 102, 241, 0.25);
+  /* 그림자 — 흑백 톤에 맞춰 거의 검정으로, 포커스 글로우만 흰색 */
+  --shadow-glow-primary:  0 0 20px rgba(255, 255, 255, 0.18);
+  --shadow-card-hover:    0 25px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadow-card-rise:     0 10px 30px -10px rgba(0, 0, 0, 0.5);
 
   /* 모션 */
   --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);

@@ -1,569 +1,524 @@
 /* ============================================================
- * Study Scene — 어두운 야간 서재. 좌측 책상, 우측 키 큰 책장.
+ * Study Room — 어두운 모던 서재 룸 풀뷰 (1점 투시).
  *
- * 핵심 수치 (480px 씬 기준):
- *   - 씬 height: 480px
- *   - 책장 영역 폭: 260px (grid)
- *   - 책장 inner 3단 균등 ≈ 139px/단
- *   - 책 height: 110px → 단 안에 안전하게 들어감
+ * 시점:
+ *   - perspective 1400px 적용된 룸 컨테이너
+ *   - 좌측 벽: rotateY(22deg)로 살짝 비스듬 → 책장이 1점 투시로 멀어짐
+ *   - 바닥: 평면 (러그가 원근감 표현)
+ *   - 중앙 책상: 정면 (소실점 근처)
  *
- * z-index 정책 (낮음 ← → 높음):
- *   wall(0) → ceiling/floor(1) → vignette(2) → desk-area(3)
- *   → lamp/cone(4) → desk/chair(5) → light-pool(6) → props(7) → hint(9)
- *
- * vignette는 책상/소품 아래에 위치해야 좌측 영역이 가려지지 않는다.
+ * 인터랙티브 요소:
+ *   - 좌측 벽 책장의 책 3권 (variant='wall')만 클릭 가능
+ *   - 그 외 모든 소품은 aria-hidden + pointer-events:none
  * ============================================================ */
 
-.study {
-  /* 서재 톤 변수 */
-  --room-wall: #2b241c;
-  --room-wall-deep: #181208;
-  --room-floor: #0a0604;
-  --warm-light: 255, 220, 140;
-  --laptop-glow: 99, 102, 241;
-  --desk-top: #e9e0cb;
-  --desk-edge: #a89770;
-  --desk-leg: #2a1c10;
-  --chair: #2a2a2c;
-  --pot: #7a5230;
-
-  /* 책장 톤 */
-  --shelf-wood-base: #4a3220;
-  --shelf-wood-deep: #1d1208;
-  --shelf-wood-high: #6a4a30;
-  --shelf-cavity: #0d0804;
-  --shelf-cavity-deep: #050302;
+.room {
+  /* 룸이 너무 어두워서 안 보이지 않도록 벽 톤을 약간 밝게 */
+  --wall: #2a2a2a;
+  --wall-deep: #1a1a1a;
+  --wall-shadow: #0e0e0e;
+  --floor: #141414;
+  --floor-deep: #050505;
+  --rug-bg: #1f1f1f;
+  --rug-spot: #d4d4d4;
+  --desk: #0a0a0a;
+  --desk-edge: #2a2a2a;
+  --desk-highlight: #3a3a3a;
+  --lamp-warm: 255, 235, 180;     /* 따뜻한 노란 빛 — 흑백 룸에 단 하나의 액센트 */
+  --chair: #141414;
 
   position: relative;
-  display: grid;
-  grid-template-columns: 1fr 260px;
-  gap: 0;
   width: 100%;
   max-width: 1080px;
-  height: 480px;
+  height: 540px;
   margin: 0 auto;
-  padding: 0;
-  border-radius: 18px;
+  border-radius: 12px;
   overflow: hidden;
-  background:
-    radial-gradient(
-      ellipse 70% 60% at 38% 50%,
-      #2a2218 0%,
-      #181208 55%,
-      #0a0604 100%
-    );
+  /* preserve-3d 제거 — 일부 환경에서 자식 z-index가 깨지는 사고 회피.
+     perspective 만으로도 자식의 rotateY는 정상 작동. */
+  perspective: 1600px;
+  perspective-origin: 50% 50%;
+  background: #1a1a1a;
   box-shadow:
-    inset 0 0 80px rgba(0, 0, 0, 0.7),
-    0 24px 60px rgba(0, 0, 0, 0.5);
+    inset 0 0 60px rgba(0, 0, 0, 0.9),
+    0 24px 60px rgba(0, 0, 0, 0.6);
   isolation: isolate;
 }
 
+/* 풀 뷰포트 모드 — cinema-active 일 때 룸이 화면 전체를 차지 */
+html.cinema-active .room {
+  max-width: none;
+  height: 100%;
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 /* ============================================================
- * 벽 / 천장 / 바닥
+ * 정면 벽 — 배경
  * ============================================================ */
-.study__wall {
+.room__wall-back {
   position: absolute;
   inset: 0;
   background:
+    /* 미세 세로 결 (콘크리트/도장 벽 느낌) */
     repeating-linear-gradient(
       to right,
-      transparent 0 22px,
-      rgba(255, 255, 255, 0.012) 22px 23px,
-      transparent 23px 44px,
-      rgba(0, 0, 0, 0.06) 44px 45px
+      transparent 0 40px,
+      rgba(255, 255, 255, 0.008) 40px 41px
     ),
-    linear-gradient(to bottom, var(--room-wall) 0%, var(--room-wall-deep) 100%);
+    linear-gradient(to bottom, var(--wall) 0%, var(--wall-deep) 70%, var(--wall-shadow) 100%);
   z-index: 0;
 }
 
-.study__ceiling {
+/* 천장 — 위쪽 어둠 그라데이션 */
+.room__ceiling {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
+  top: 0; left: 0; right: 0;
+  height: 30%;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), transparent);
   z-index: 1;
-}
-
-.study__floor {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 56px;
-  background:
-    linear-gradient(to top, var(--room-floor) 0%, transparent 100%),
-    repeating-linear-gradient(
-      90deg,
-      transparent 0 32px,
-      rgba(255, 255, 255, 0.02) 32px 33px
-    );
-  z-index: 1;
+  pointer-events: none;
 }
 
 /* ============================================================
- * 비넷 — 배경 어두움. 책상/소품 아래에 위치 (z-index 2)
+ * 좌측 벽 — 1점 투시: rotateY로 사선 배치
  * ============================================================ */
-.study__vignette {
+.room__wall-left {
   position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    ellipse 95% 90% at 42% 55%,
-    transparent 35%,
-    rgba(0, 0, 0, 0.2) 70%,
-    rgba(0, 0, 0, 0.42) 100%
-  );
-  pointer-events: none;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 56%;
+  background:
+    repeating-linear-gradient(
+      to right,
+      transparent 0 32px,
+      rgba(255, 255, 255, 0.01) 32px 33px
+    ),
+    linear-gradient(to right, var(--wall) 0%, var(--wall-deep) 100%);
+  transform-origin: left center;
+  transform: rotateY(12deg);
+  box-shadow: inset -60px 0 80px rgba(0, 0, 0, 0.6);
   z-index: 2;
 }
 
-/* ============================================================
- * 좌측 책상 영역
- * ============================================================ */
-.study__desk-area {
-  position: relative;
-  z-index: 3;
-  /* grid row가 다른 셀(책장) 때문에 늘어나도 desk-area 좌표계는 480 고정 */
-  height: 480px;
-  align-self: start;
-  overflow: hidden;
-}
-
-/* ============================================================
- * 천장 램프 + 빛 원뿔
- * ============================================================ */
-.study__lamp {
+/* 좌측 벽 위쪽에 따뜻한 spot light (램프 빛이 벽에 닿는 느낌) */
+.room__wall-light {
   position: absolute;
-  top: 0;
-  left: 45%;
-  transform: translateX(-50%);
-  z-index: 4;
-}
-
-.study__lamp-cord {
-  width: 2px;
-  height: 56px;
-  margin: 0 auto;
-  background: linear-gradient(to bottom, #1a1a1a, #2a2a2a);
-}
-
-.study__lamp-shade {
-  width: 62px;
-  height: 28px;
-  margin: 0 auto;
-  background: linear-gradient(to bottom, #2c2418 0%, #1a1208 40%, #0c0804 100%);
-  border-radius: 50% 50% 8px 8px / 80% 80% 20% 20%;
-  position: relative;
-  box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.06),
-    0 4px 10px rgba(0, 0, 0, 0.6);
-}
-
-.study__lamp-shade::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 12%;
-  right: 12%;
-  height: 5px;
+  top: 35%;
+  right: -8%;
+  width: 70%;
+  height: 50%;
   background: radial-gradient(
-    ellipse at center,
-    rgba(var(--warm-light), 0.95),
-    rgba(var(--warm-light), 0.4) 60%,
-    transparent
-  );
-  filter: blur(1px);
-}
-
-.study__lamp-bulb {
-  position: absolute;
-  bottom: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 34px;
-  height: 16px;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(var(--warm-light), 0.95),
-    rgba(var(--warm-light), 0.2) 60%,
-    transparent
-  );
-  border-radius: 50%;
-  filter: blur(3px);
-}
-
-/* 빛 원뿔 — 책상까지 넓게 떨어지도록 폭 확대 */
-.study__light-cone {
-  position: absolute;
-  top: 84px;
-  left: 45%;
-  transform: translateX(-50%);
-  width: 520px;
-  height: 320px;
-  background: radial-gradient(
-    ellipse 50% 100% at 50% 0%,
-    rgba(var(--warm-light), 0.34) 0%,
-    rgba(var(--warm-light), 0.18) 28%,
-    rgba(var(--warm-light), 0.06) 58%,
-    transparent 80%
+    ellipse at right center,
+    rgba(var(--lamp-warm), 0.25) 0%,
+    rgba(var(--lamp-warm), 0.08) 40%,
+    transparent 70%
   );
   pointer-events: none;
   mix-blend-mode: screen;
-  filter: blur(6px);
-  z-index: 4;
+  filter: blur(8px);
 }
 
-/* 책상 표면 빛 풀 — 책상 위에 떨어지는 따뜻한 빛 */
-.study__light-pool {
+/* ============================================================
+ * 바닥 + 카우하이드 러그
+ * ============================================================ */
+.room__floor {
   position: absolute;
-  bottom: 178px;
-  left: 12%;
-  right: 8%;
-  height: 16px;
+  left: 0; right: 0; bottom: 0;
+  height: 38%;
+  background: linear-gradient(to top, var(--floor-deep) 0%, var(--floor) 50%, transparent 100%);
+  z-index: 3;
+}
+
+.room__rug {
+  position: absolute;
+  left: 22%;
+  right: 18%;
+  bottom: 6%;
+  height: 65%;
+  background: var(--rug-bg);
+  border-radius: 45% 55% 42% 58% / 50% 45% 55% 50%; /* 비정형 가죽 모양 */
+  box-shadow:
+    inset 0 -8px 16px rgba(0, 0, 0, 0.8),
+    0 10px 30px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+/* 카우하이드 흑백 얼룩 */
+.room__rug-patch {
+  position: absolute;
+  background: var(--rug-spot);
+  filter: blur(1px);
+  opacity: 0.85;
+}
+.room__rug-patch--1 {
+  top: 12%; left: 18%; width: 30%; height: 38%;
+  border-radius: 60% 40% 55% 45% / 55% 60% 40% 45%;
+}
+.room__rug-patch--2 {
+  top: 48%; left: 50%; width: 22%; height: 28%;
+  border-radius: 50% 55% 45% 60% / 60% 50% 55% 40%;
+}
+.room__rug-patch--3 {
+  top: 25%; right: 8%; width: 18%; height: 22%;
+  border-radius: 55% 45% 60% 40% / 50% 55% 45% 60%;
+}
+
+/* ============================================================
+ * 좌측 벽 책장 — wall variant
+ * 좌측 벽과 같은 rotateY로 동기화되어 1점 투시 안에 박혀있는 느낌
+ * ============================================================ */
+.room__shelf {
+  position: absolute;
+  left: 5%;
+  top: 12%;
+  width: 56%;
+  height: 62%;
+  z-index: 4;
+  transform-origin: left center;
+  transform: rotateY(12deg);
+}
+
+/* ============================================================
+ * 중앙 책상
+ * ============================================================ */
+.room__desk {
+  position: absolute;
+  bottom: 22%;
+  left: 50%;
+  width: 38%;
+  height: 14%;
+  transform: translateX(-30%);
+  z-index: 5;
+}
+
+.room__desk-top {
+  width: 100%;
+  height: 10px;
+  background: linear-gradient(to bottom, var(--desk-highlight) 0%, var(--desk) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 6px 14px rgba(0, 0, 0, 0.7);
+  border-radius: 2px;
+}
+
+.room__desk-edge {
+  width: 100%;
+  height: 8px;
+  background: linear-gradient(to bottom, var(--desk-edge) 0%, var(--desk) 100%);
+}
+
+.room__desk-leg {
+  position: absolute;
+  top: 18px;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to right, #000 0%, var(--desk-edge) 50%, #000 100%);
+}
+.room__desk-leg--fl { left: 6%; }
+.room__desk-leg--fr { right: 6%; }
+
+/* 책상 위 따뜻한 빛 풀(데스크 램프 아래) */
+.room__desk-light {
+  position: absolute;
+  top: -8px;
+  right: 12%;
+  width: 60%;
+  height: 26px;
   background: radial-gradient(
-    ellipse at center,
-    rgba(var(--warm-light), 0.5) 0%,
-    rgba(var(--warm-light), 0.15) 50%,
+    ellipse at right center,
+    rgba(var(--lamp-warm), 0.55) 0%,
+    rgba(var(--lamp-warm), 0.18) 50%,
     transparent 80%
   );
   filter: blur(4px);
   mix-blend-mode: screen;
   pointer-events: none;
-  z-index: 6;
+  z-index: 1;
 }
 
 /* ============================================================
- * 책상
+ * 데스크 램프 — 책상 위에 단단히 선 클래식 데스크 램프
+ * 구조: base(받침) → arm(수직 봉) → shade(갓) → bulb(따뜻한 빛)
+ *
+ * 책상 위에 위치하려면 책상의 자식이 아니라 .room__desk 위쪽에 absolute로 부착.
+ * bottom: 100% 로 책상 표면 위에 자연스럽게 올라간다.
  * ============================================================ */
-.study__desk {
+.room__lamp {
   position: absolute;
-  bottom: 84px;
-  left: 4%;
-  right: 12px;
-  z-index: 5;
-}
-
-.study__desk-top {
-  width: 100%;
-  height: 12px;
-  background: linear-gradient(to bottom, var(--desk-top) 0%, #d4c8ad 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
-    0 6px 12px rgba(0, 0, 0, 0.55);
-  border-radius: 2px;
-}
-
-.study__desk-edge {
-  width: 100%;
-  height: 6px;
-  background: linear-gradient(to bottom, var(--desk-edge), #8a7a58);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
-}
-
-.study__desk-leg {
-  position: absolute;
-  top: 18px;
-  width: 6px;
-  height: 66px;
-  background: linear-gradient(
-    to right,
-    #1a120a 0%,
-    var(--desk-leg) 50%,
-    #1a120a 100%
-  );
-  z-index: -1;
-}
-.study__desk-leg--left { left: 8%; }
-.study__desk-leg--right { right: 6%; }
-
-/* ============================================================
- * 노트북
- * ============================================================ */
-.study__laptop {
-  position: absolute;
-  bottom: 110px;
-  left: 32%;
-  width: 96px;
+  bottom: 100%;
+  right: 10%;
+  width: 28px;
+  height: 38px;
   z-index: 7;
 }
 
-.study__laptop-screen {
-  position: relative;
-  width: 100%;
-  height: 56px;
-  background: linear-gradient(to bottom, #0a0a0c 0%, #14141a 100%);
-  border-radius: 4px 4px 0 0;
-  border: 1px solid #2a2a30;
-  border-bottom: 0;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 0 16px rgba(var(--laptop-glow), 0.3);
-  overflow: hidden;
-}
-
-.study__laptop-glow {
-  position: absolute;
-  inset: 3px;
-  background:
-    linear-gradient(135deg, rgba(var(--laptop-glow), 0.22), transparent 50%),
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0 5px,
-      rgba(var(--laptop-glow), 0.1) 5px 6px
-    );
-  border-radius: 2px;
-}
-
-.study__laptop-base {
-  width: 116%;
-  height: 6px;
-  margin-left: -3%;
-  background: linear-gradient(to bottom, #555 0%, #2a2a2a 80%, #1a1a1a 100%);
-  border-radius: 0 0 5px 5px;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
-}
-
-/* ============================================================
- * 화분 + 식물
- * ============================================================ */
-.study__plant {
-  position: absolute;
-  bottom: 110px;
-  left: 11%;
-  width: 46px;
-  z-index: 7;
-}
-
-.study__plant-pot {
-  width: 32px;
-  height: 20px;
-  margin: 0 auto;
-  background: linear-gradient(
-    to bottom,
-    #8a6038 0%,
-    var(--pot) 50%,
-    #3a2410 100%
-  );
-  border-radius: 3px 3px 12px 12px / 3px 3px 50% 50%;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    0 3px 6px rgba(0, 0, 0, 0.5);
-  position: relative;
-}
-
-.study__plant-pot::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -2px;
-  right: -2px;
-  height: 3px;
-  background: linear-gradient(to bottom, #6a4624, #4a2e10);
-  border-radius: 2px;
-}
-
-.study__plant-leaves {
-  position: relative;
-  width: 46px;
-  height: 40px;
-  margin: 0 auto -5px;
-}
-
-.study__leaf {
+/* 받침 — 책상 표면에 놓인 작은 원형 베이스 */
+.room__lamp-base {
   position: absolute;
   bottom: 0;
   left: 50%;
-  width: 7px;
-  height: 26px;
-  background: linear-gradient(to top, #2a4218 0%, #5a8a3a 60%, #7aa84a 100%);
-  border-radius: 50% 50% 50% 50% / 100% 100% 0 0;
-  transform-origin: bottom center;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-}
-.study__leaf--1 { transform: translateX(-50%) rotate(-32deg); }
-.study__leaf--2 { transform: translateX(-50%) rotate(-12deg); height: 32px; }
-.study__leaf--3 { transform: translateX(-50%) rotate(6deg); height: 36px; }
-.study__leaf--4 { transform: translateX(-50%) rotate(22deg); height: 28px; }
-.study__leaf--5 { transform: translateX(-50%) rotate(40deg); height: 22px; }
-
-/* ============================================================
- * 책상 위 책 무더기
- * ============================================================ */
-.study__stack {
-  position: absolute;
-  bottom: 110px;
-  left: 60%;
-  width: 54px;
-  z-index: 7;
-}
-
-.study__stack-book {
-  width: 100%;
-  height: 7px;
-  margin-bottom: 1px;
-  border-radius: 1px;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 3px;
+  background: linear-gradient(to bottom, #2a2a2a 0%, #050505 100%);
+  border-radius: 50% / 100%;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    0 1px 2px rgba(0, 0, 0, 0.4);
-}
-.study__stack-book--1 {
-  background: linear-gradient(to bottom, #4a1620, #2a0a12);
-  width: 90%;
-  margin-left: 5%;
-}
-.study__stack-book--2 {
-  background: linear-gradient(to bottom, #1f3a2b, #0d1d15);
-  width: 100%;
-}
-.study__stack-book--3 {
-  background: linear-gradient(to bottom, #5a3a22, #2c1c10);
-  width: 95%;
-  margin-left: 2.5%;
+    0 1px 0 rgba(255, 255, 255, 0.04),
+    0 2px 4px rgba(0, 0, 0, 0.7);
 }
 
-/* ============================================================
- * 메모지
- * ============================================================ */
-.study__notepad {
+/* 수직 봉 — 베이스에서 갓까지 곧게 올라감 */
+.room__lamp-arm {
   position: absolute;
-  bottom: 111px;
+  bottom: 3px;
   left: 50%;
-  width: 44px;
-  height: 13px;
-  background: linear-gradient(to bottom, #f4ecd2, #ddd2b4);
+  transform: translateX(-50%);
+  width: 2px;
+  height: 22px;
+  background: linear-gradient(to right, #050505 0%, #2a2a2a 40%, #1a1a1a 100%);
   border-radius: 1px;
+}
+
+/* 갓 — 봉 위에 얹힌 우산 모양, 빛이 책상으로 떨어지도록 아래로 열려 있음 */
+.room__lamp-shade {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 12px;
+  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #050505 100%);
+  border-radius: 50% 50% 4px 4px / 100% 100% 16% 16%;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    0 2px 4px rgba(0, 0, 0, 0.5);
-  z-index: 7;
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+/* 갓 안쪽에서 새어 나오는 따뜻한 빛 */
+.room__lamp-bulb {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 3px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(var(--lamp-warm), 0.95) 0%,
+    rgba(var(--lamp-warm), 0.3) 60%,
+    transparent 100%
+  );
+  filter: blur(1px);
+  pointer-events: none;
+}
+
+/* 갓 아래로 떨어지는 따뜻한 빛 cone */
+.room__lamp::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 24px;
+  background: radial-gradient(
+    ellipse 50% 100% at 50% 0%,
+    rgba(var(--lamp-warm), 0.45) 0%,
+    rgba(var(--lamp-warm), 0.15) 40%,
+    transparent 80%
+  );
+  filter: blur(3px);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* ============================================================
+ * 펼친 책 (책상 왼쪽 — 시각적 디테일)
+ * ============================================================ */
+.room__open-book {
+  position: absolute;
+  bottom: 12px;
+  left: 14%;
+  width: 60px;
+  height: 36px;
+  display: flex;
+  transform: perspective(80px) rotateX(20deg);
+  transform-origin: center bottom;
+  z-index: 6;
+}
+
+.room__open-book-page {
+  flex: 1;
+  background: linear-gradient(to bottom, #d4d4d4 0%, #a8a8a8 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.6);
+  padding: 4px 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.room__open-book-page--left { transform: rotateY(-8deg); transform-origin: right center; }
+.room__open-book-page--right { transform: rotateY(8deg); transform-origin: left center; }
+
+.room__open-book-line {
+  height: 1px;
+  background: rgba(50, 50, 50, 0.5);
+  width: 100%;
+}
+.room__open-book-line:nth-child(2) { width: 80%; }
+.room__open-book-line:nth-child(3) { width: 65%; }
+.room__open-book-line:nth-child(4) { width: 50%; }
+
+/* ============================================================
+ * 메모지 + 머그
+ * ============================================================ */
+.room__notepad {
+  position: absolute;
+  bottom: 16px;
+  left: 36%;
+  width: 36px;
+  height: 12px;
+  background: linear-gradient(to bottom, #ededed, #c4c4c4);
+  border-radius: 1px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 0 4px;
+  padding: 0 3px;
   gap: 1.5px;
-  transform: rotate(-3deg);
+  transform: rotate(-2deg);
+  z-index: 6;
 }
-
-.study__notepad-line {
+.room__notepad span {
   height: 1px;
-  background: rgba(80, 60, 30, 0.4);
-  width: 100%;
+  background: rgba(80, 80, 80, 0.5);
 }
-.study__notepad-line:nth-child(2) { width: 75%; }
-.study__notepad-line:nth-child(3) { width: 60%; }
+.room__notepad span:nth-child(1) { width: 100%; }
+.room__notepad span:nth-child(2) { width: 65%; }
 
-/* ============================================================
- * 머그컵
- * ============================================================ */
-.study__mug {
+.room__mug {
   position: absolute;
-  bottom: 110px;
-  left: 76%;
-  width: 20px;
-  height: 20px;
-  background: linear-gradient(to bottom, #ddd 0%, #aaa 60%, #888 100%);
+  bottom: 14px;
+  left: 55%;
+  width: 14px;
+  height: 16px;
+  background: linear-gradient(to bottom, #2a2a2a 0%, #050505 100%);
   border-radius: 2px 2px 4px 4px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    0 2px 4px rgba(0, 0, 0, 0.5);
-  z-index: 7;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  z-index: 6;
 }
-.study__mug::after {
+.room__mug::after {
   content: '';
   position: absolute;
   top: 3px;
   right: -4px;
-  width: 5px;
-  height: 9px;
-  border: 2px solid #aaa;
+  width: 4px;
+  height: 8px;
+  border: 1.5px solid #2a2a2a;
   border-left: 0;
   border-radius: 0 4px 4px 0;
 }
 
-.study__mug-steam {
+.room__mug-steam {
   position: absolute;
-  top: -14px;
+  top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  width: 12px;
+  width: 10px;
   height: 12px;
   pointer-events: none;
 }
-.study__mug-steam span {
+.room__mug-steam span {
   position: absolute;
   bottom: 0;
-  width: 3px;
-  height: 12px;
-  background: linear-gradient(to top, rgba(255, 240, 200, 0.4), transparent);
+  width: 2.5px;
+  height: 10px;
+  background: linear-gradient(to top, rgba(255, 240, 220, 0.35), transparent);
   border-radius: 50%;
-  filter: blur(1.5px);
-  animation: steamRise 3s ease-in-out infinite;
+  filter: blur(1px);
+  animation: roomSteamRise 3.2s ease-in-out infinite;
 }
-.study__mug-steam span:nth-child(1) { left: 1px; }
-.study__mug-steam span:nth-child(2) { right: 1px; animation-delay: 1.2s; }
+.room__mug-steam span:nth-child(1) { left: 0; }
+.room__mug-steam span:nth-child(2) { right: 0; animation-delay: 1.6s; }
 
-@keyframes steamRise {
+@keyframes roomSteamRise {
   0%   { opacity: 0; transform: translateY(0) scale(1); }
-  30%  { opacity: 0.7; }
-  100% { opacity: 0; transform: translateY(-10px) scale(1.3); }
+  30%  { opacity: 0.6; }
+  100% { opacity: 0; transform: translateY(-10px) scale(1.4); }
 }
 
 /* ============================================================
- * 의자
+ * 의자 (책상 정면, 등받이 + 좌석 실루엣)
  * ============================================================ */
-.study__chair {
+.room__chair {
   position: absolute;
-  bottom: 0;
-  left: 32%;
-  width: 100px;
-  height: 100px;
+  bottom: 5%;
+  left: 56%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 130px;
   z-index: 5;
 }
 
-.study__chair-back {
+.room__chair-back {
   position: absolute;
-  bottom: 32px;
+  bottom: 50px;
   left: 50%;
   transform: translateX(-50%);
-  width: 82px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
   background: linear-gradient(
     to bottom,
-    #3a3a3c 0%,
+    #2a2a2a 0%,
     var(--chair) 50%,
-    #18181a 100%
+    #000 100%
   );
-  border-radius: 16px 16px 6px 6px;
+  border-radius: 8px 8px 4px 4px;
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.08),
-    inset -4px 0 8px rgba(0, 0, 0, 0.4),
-    0 6px 14px rgba(0, 0, 0, 0.6);
+    inset 0 2px 0 rgba(255, 255, 255, 0.06),
+    0 6px 12px rgba(0, 0, 0, 0.7);
 }
 
-.study__chair-arm {
+.room__chair-seat {
   position: absolute;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 56px;
-  height: 34px;
-  background: linear-gradient(to bottom, #2a2a2c 0%, #0e0e10 100%);
-  border-radius: 4px 4px 0 0;
+  width: 70px;
+  height: 50px;
+  background: linear-gradient(to bottom, #1a1a1a 0%, #000 100%);
+  border-radius: 4px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
 }
 
 /* ============================================================
- * 힌트 텍스트
+ * 비넷 + 힌트
  * ============================================================ */
-.study__hint {
+.room__vignette {
   position: absolute;
-  bottom: 8px;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 90% 80% at 45% 50%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.35) 75%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+  pointer-events: none;
+  z-index: 8;
+}
+
+.room__hint {
+  position: absolute;
+  bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 11px;
   letter-spacing: 0.08em;
-  color: rgba(255, 220, 140, 0.55);
+  color: rgba(255, 235, 180, 0.45);
   opacity: 0.85;
   z-index: 9;
   margin: 0;
@@ -571,112 +526,296 @@
 }
 
 /* ============================================================
- * 우측 책장 영역
+ * 펜던트 등 — 천장에 매달린 클릭 가능 조명
+ * 어두운 룸에서 유일한 시각 초점. 클릭 시 룸 전체 점등.
  * ============================================================ */
-.study__shelf-area {
-  position: relative;
-  z-index: 5;
-  display: flex;
-  align-items: stretch;
-  justify-content: stretch;
-  padding: 10px 14px 14px 0;
+.room__pendant {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 230px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  z-index: 10;
+  -webkit-tap-highlight-color: transparent;
+}
+.room__pendant:focus-visible {
+  outline: 2px solid rgba(var(--lamp-warm), 0.9);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+/* 전선 — 천장에서 갓까지 가는 줄 */
+.room__pendant-cord {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 150px;
+  background: linear-gradient(to bottom, #1a1a1a, #0a0a0a);
+}
+
+/* 갓 — 검은 산업용 돔 */
+.room__pendant-shade {
+  position: absolute;
+  top: 142px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 32px;
+  background: radial-gradient(ellipse at 35% 25%, #3a3a3a 0%, #1a1a1a 50%, #050505 100%);
+  border-radius: 50% 50% 8px 8px / 70% 70% 30% 30%;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -8px 10px rgba(0, 0, 0, 0.7),
+    0 4px 8px rgba(0, 0, 0, 0.7);
+}
+
+/* 벌브 — 갓 아래 매달린 Edison 벌브 (꺼진 기본 상태) */
+.room__pendant-bulb {
+  position: absolute;
+  top: 172px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 16px;
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    rgba(var(--lamp-warm), 0.35) 0%,
+    rgba(80, 70, 50, 0.6) 60%,
+    rgba(20, 18, 14, 0.8) 100%
+  );
+  border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+  filter: blur(0.3px);
+  transition: background 600ms ease, box-shadow 600ms ease, filter 600ms ease;
+}
+
+/* 후광 — 켜지면 등장 */
+.room__pendant-glow {
+  position: absolute;
+  top: 156px;
+  left: 50%;
+  transform: translate(-50%, 0);
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(
+    circle at center,
+    rgba(var(--lamp-warm), 0.55) 0%,
+    rgba(var(--lamp-warm), 0.18) 35%,
+    transparent 70%
+  );
+  filter: blur(6px);
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 700ms ease;
+}
+
+/* 빛 cone — 책상으로 떨어지는 따뜻한 광선 */
+.room__pendant-cone {
+  position: absolute;
+  top: 188px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 180px;
+  height: 280px;
+  background: radial-gradient(
+    ellipse 50% 100% at 50% 0%,
+    rgba(var(--lamp-warm), 0.32) 0%,
+    rgba(var(--lamp-warm), 0.10) 35%,
+    transparent 75%
+  );
+  filter: blur(8px);
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 800ms ease;
+}
+
+/* 점등 상태 — 벌브 워밍업 + 후광/cone 등장 */
+.room--lit .room__pendant-bulb {
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    #fff8e0 0%,
+    rgba(var(--lamp-warm), 0.95) 35%,
+    rgba(var(--lamp-warm), 0.5) 70%,
+    rgba(var(--lamp-warm), 0.2) 100%
+  );
+  box-shadow:
+    0 0 12px rgba(var(--lamp-warm), 0.85),
+    0 0 24px rgba(var(--lamp-warm), 0.5);
+  filter: blur(0.2px) brightness(1.2);
+}
+.room--lit .room__pendant-glow,
+.room--lit .room__pendant-cone {
+  opacity: 1;
 }
 
 /* ============================================================
- * 책장 study variant — 사실적 우측 책장
- * 내부 단마다 깊이감(뒷판/측판/상판 그림자/플랭크).
- *
- * 수치: shelf-area 480-24=456 → wrap 456-20=436 → bookshelf 436
- *        → padding 8+10=18 → inner 418 → 단당 139px (3단)
- *        → 단 내부 padding 3+6=9 → 책 가용 130 → 책 height 110 ✓
+ * 다크 / 점등 상태 전환
  * ============================================================ */
-.bookshelf-wrap--study {
+/* 다크 오버레이 — 가구 위, 펜던트 아래에 깔리는 검은 막 */
+.room--dark::after,
+.room--lit::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 7;
+  pointer-events: none;
+  transition: opacity 700ms ease;
+}
+.room--lit::after {
+  opacity: 0;
+}
+
+/* 책장 — 다크 상태에서 숨김, 점등 시 페이드+슬라이드 등장 */
+.room__shelf {
+  transition: opacity 700ms ease 250ms, transform 700ms ease 250ms;
+}
+.room--dark .room__shelf {
+  opacity: 0;
+  transform: rotateY(12deg) translateX(-24px);
+  pointer-events: none;
+  transition: opacity 250ms ease, transform 250ms ease;
+}
+
+/* 좌측 벽 따뜻한 빛 — 펜던트 OFF면 같이 꺼짐 */
+.room--dark .room__wall-light {
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+.room--lit .room__wall-light {
+  opacity: 1;
+  transition: opacity 700ms ease 200ms;
+}
+
+/* 책상 위 소품 — 마지막에 등장 */
+.room__open-book,
+.room__notepad,
+.room__mug {
+  transition: opacity 600ms ease 450ms;
+}
+.room--dark .room__open-book,
+.room--dark .room__notepad,
+.room--dark .room__mug {
+  opacity: 0;
+  transition: opacity 250ms ease;
+}
+
+/* 데스크 램프 — 다크일 땐 꺼지고, 점등 시 따라 켜짐 */
+.room--dark .room__lamp-bulb,
+.room--dark .room__desk-light {
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.room--lit .room__lamp-bulb,
+.room--lit .room__desk-light {
+  opacity: 1;
+  transition: opacity 600ms ease 350ms;
+}
+
+/* 힌트 텍스트 — 점등 후에만 표시 */
+.room--dark .room__hint {
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.room--lit .room__hint {
+  opacity: 0.85;
+  transition: opacity 500ms ease 700ms;
+}
+
+/* 다크 모드에서 비넷 살짝 강화 */
+.room--dark .room__vignette {
+  background: radial-gradient(
+    ellipse 90% 80% at 50% 50%,
+    rgba(0, 0, 0, 0.2) 30%,
+    rgba(0, 0, 0, 0.55) 70%,
+    rgba(0, 0, 0, 0.85) 100%
+  );
+}
+
+/* 클릭 유도 힌트 펄스 */
+@keyframes pendantHintPulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.75; }
+}
+.room--dark.room--hint .room__pendant-bulb {
+  animation: pendantHintPulse 2.4s ease-in-out infinite;
+}
+
+/* ============================================================
+ * 책장 wall variant — 좌측 벽 책장 스타일
+ * 부모 .room__shelf 가 이미 rotateY(22deg)를 적용했으므로
+ * 책장 자체는 정면 디자인. 3단 균등 분배.
+ * ============================================================ */
+.bookshelf-wrap--wall {
   width: 100%;
   height: 100%;
   max-width: none;
   gap: 0;
-  padding: 8px 0 12px 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
 }
 
-.bookshelf--study {
+.bookshelf--wall {
   flex: 1;
   min-height: 0;
   position: relative;
-  padding: 8px 12px 10px;
+  padding: 10px 14px 12px;
   background:
     repeating-linear-gradient(
       90deg,
-      transparent 0 24px,
-      rgba(255, 255, 255, 0.025) 24px 25px,
-      transparent 25px 50px,
-      rgba(0, 0, 0, 0.08) 50px 51px
+      transparent 0 28px,
+      rgba(255, 255, 255, 0.02) 28px 29px
     ),
-    linear-gradient(
-      135deg,
-      var(--shelf-wood-high) 0%,
-      var(--shelf-wood-base) 45%,
-      var(--shelf-wood-deep) 100%
-    );
-  border-radius: 8px 8px 4px 4px;
+    linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #0a0a0a 100%);
+  border-radius: 4px;
   box-shadow:
-    -8px 0 24px -8px rgba(0, 0, 0, 0.7),
-    0 16px 40px -12px rgba(0, 0, 0, 0.7),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.7),
-    inset 0 6px 12px -6px rgba(0, 0, 0, 0.7);
+    inset 0 0 0 1px rgba(0, 0, 0, 0.8),
+    inset 0 6px 12px -6px rgba(0, 0, 0, 0.8),
+    0 16px 40px -12px rgba(0, 0, 0, 0.9);
 }
 
-/* 책장 위 몰딩 */
-.bookshelf--study::before {
+.bookshelf--wall::before {
   content: '';
   position: absolute;
   top: -4px;
   left: -4px;
   right: -4px;
-  height: 7px;
-  background: linear-gradient(
-    to bottom,
-    var(--shelf-wood-high),
-    var(--shelf-wood-base) 60%,
-    var(--shelf-wood-deep)
-  );
+  height: 6px;
+  background: linear-gradient(to bottom, #3a3a3a, #1a1a1a 60%, #0a0a0a);
   border-radius: 4px 4px 0 0;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 2px 4px rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 4px rgba(0, 0, 0, 0.7);
   z-index: 2;
 }
 
-/* 책장 두꺼운 바닥판 */
-.bookshelf--study::after {
+.bookshelf--wall::after {
   content: '';
   position: absolute;
   bottom: -4px;
   left: -4px;
   right: -4px;
-  height: 9px;
-  background: linear-gradient(
-    to bottom,
-    var(--shelf-wood-high),
-    var(--shelf-wood-base) 50%,
-    var(--shelf-wood-deep)
-  );
-  border-radius: 0 0 6px 6px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 6px 12px rgba(0, 0, 0, 0.7);
+  height: 8px;
+  background: linear-gradient(to bottom, #3a3a3a, #1a1a1a 50%, #0a0a0a);
+  border-radius: 0 0 4px 4px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 6px 12px rgba(0, 0, 0, 0.8);
   z-index: 2;
 }
 
-/* default variant 의 top/side/floor는 study 에서 비활성 */
-.bookshelf--study .bookshelf__top,
-.bookshelf--study .bookshelf__side,
-.bookshelf--study .bookshelf__floor-shadow {
+.bookshelf--wall .bookshelf__top,
+.bookshelf--wall .bookshelf__side,
+.bookshelf--wall .bookshelf__floor-shadow {
   display: none;
 }
 
-.bookshelf--study .bookshelf__inner {
+.bookshelf--wall .bookshelf__inner {
   position: relative;
   height: 100%;
   display: flex;
@@ -685,158 +824,169 @@
   padding: 0;
 }
 
-/* ============================================================
- * 단(shelf) — 실제 책장 칸
- * ============================================================ */
-.bookshelf--study .bookshelf__shelf {
+.bookshelf--wall .bookshelf__shelf {
   position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 3px 4px 6px;
+  padding: 4px 6px 8px;
   background:
     repeating-linear-gradient(
       90deg,
-      transparent 0 12px,
-      rgba(255, 255, 255, 0.015) 12px 13px
+      transparent 0 16px,
+      rgba(255, 255, 255, 0.01) 16px 17px
     ),
     linear-gradient(
       to bottom,
-      var(--shelf-cavity-deep) 0%,
-      var(--shelf-cavity) 30%,
-      var(--shelf-cavity) 70%,
-      var(--shelf-cavity-deep) 100%
+      #000 0%,
+      #050505 30%,
+      #050505 70%,
+      #000 100%
     );
   box-shadow:
-    inset 0 12px 16px -10px rgba(0, 0, 0, 0.9),
-    inset 8px 0 12px -8px rgba(0, 0, 0, 0.7),
-    inset -8px 0 12px -8px rgba(0, 0, 0, 0.7),
-    inset 0 -8px 12px -10px rgba(0, 0, 0, 0.6);
+    inset 0 12px 16px -10px rgba(0, 0, 0, 0.95),
+    inset 8px 0 12px -8px rgba(0, 0, 0, 0.8),
+    inset -8px 0 12px -8px rgba(0, 0, 0, 0.8),
+    inset 0 -8px 12px -10px rgba(0, 0, 0, 0.7);
 }
 
-/* 단 사이 plank — 마지막 단은 책장 바닥판과 겹치므로 숨김 */
-.bookshelf--study .bookshelf__plank {
+.bookshelf--wall .bookshelf__plank {
   position: absolute;
   left: -6px;
   right: -6px;
   bottom: -3px;
   height: 5px;
-  background: linear-gradient(
-    to bottom,
-    var(--shelf-wood-high) 0%,
-    var(--shelf-wood-base) 45%,
-    var(--shelf-wood-deep) 100%
-  );
-  border-radius: 2px;
+  background: linear-gradient(to bottom, #3a3a3a 0%, #1a1a1a 50%, #0a0a0a 100%);
+  border-radius: 1px;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 3px 6px rgba(0, 0, 0, 0.7),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.7);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 2px 4px rgba(0, 0, 0, 0.8);
   z-index: 3;
 }
+.bookshelf--wall .bookshelf__shelf:last-child .bookshelf__plank { display: none; }
 
-.bookshelf--study .bookshelf__shelf:last-child .bookshelf__plank {
-  display: none;
-}
-
-.bookshelf--study .bookshelf__books {
+.bookshelf--wall .bookshelf__books {
   position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
   width: 100%;
   height: 100%;
-  /* default의 min-height: 252px 상속을 끊어야 단이 flex:1로 균등 분배됨.
-     이걸 안 끊으면 단마다 252px이 강제되어 책장이 부풀고 grid row도 같이 부풀어
-     좌측 desk-area의 책상/소품도 480px 씬 밖으로 밀려나 안 보이게 된다. */
   min-height: 0 !important;
   z-index: 2;
+  padding: 0 8px;
 }
 
-/* 책 크기 — 단 가용 공간(130px)에 안전하게 들어가도록 110px */
-.bookshelf--study .book {
-  --book-h: 110px !important;
-  --book-w: 44px !important;
+/* 내 프로젝트 책 — 자연스러운 크기 + 미세한 하이라이트 글로우 */
+.bookshelf--wall .book {
+  --book-h: 84px !important;
+  --book-w: 26px !important;
+  position: relative;
+  z-index: 3;
+  /* 내 책은 약간 위로 + 미세 글로우로 더미 사이에서 두드러짐 */
+  margin: 0 4px;
 }
 
-/* 책등 폰트 사이즈도 작은 책에 맞춤 */
-.bookshelf--study .book__spine-title {
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  max-width: 110px;
+/* 책등 내부에 미세 따뜻한 글로우 (내 책만) */
+.bookshelf--wall .book__spine {
+  box-shadow:
+    inset 0 8px 12px -6px rgba(0, 0, 0, 0.55),
+    inset 0 -8px 10px -6px rgba(0, 0, 0, 0.6),
+    inset 1px 0 2px rgba(255, 255, 255, 0.06),
+    inset -1px 0 2px rgba(0, 0, 0, 0.4),
+    0 4px 10px rgba(0, 0, 0, 0.5),
+    /* 미세 하이라이트 — 내 책이 진열 속에서 두드러지게 */
+    0 0 14px rgba(255, 235, 180, 0.15);
 }
-.bookshelf--study .book__spine-sub { font-size: 7px; }
-.bookshelf--study .book__spine-emboss { font-size: 10px; top: 4%; }
-.bookshelf--study .book__spine-band { height: 5px; }
-.bookshelf--study .book__spine-band--top { top: 14%; }
-.bookshelf--study .book__spine-band--bottom { top: 76%; }
+
+.bookshelf--wall .book__spine-title {
+  font-size: 7px;
+  letter-spacing: 0.1em;
+  max-width: 76px;
+}
+.bookshelf--wall .book__spine-sub { font-size: 6px; }
+.bookshelf--wall .book__spine-emboss { font-size: 8px; top: 4%; }
+.bookshelf--wall .book__spine-band { height: 3px; }
+.bookshelf--wall .book__spine-band--top { top: 14%; }
+.bookshelf--wall .book__spine-band--bottom { top: 76%; }
 
 /* ============================================================
- * 단 안의 빈 공간 장식 — 작은 책 무더기 + 액자
+ * 더미 책 — wall variant 단의 양쪽을 채우는 회색 책들
+ * 인터랙티브 아님 (aria-hidden). 책장이 비어 보이지 않게 진열감 제공.
  * ============================================================ */
-.bookshelf--study .bookshelf__shelf::before {
-  content: '';
-  position: absolute;
-  bottom: 8px;
-  left: 8px;
-  width: 22px;
-  height: 14px;
+.book-dummy {
+  display: inline-block;
+  flex-shrink: 0;
+  width: var(--dw);
+  height: var(--dh);
   background:
-    linear-gradient(to bottom, #4a3220, #2a1c10) 0 0 / 100% 3px no-repeat,
-    linear-gradient(to bottom, #1f3a2b, #0d1d15) 0 4px / 90% 3px no-repeat,
-    linear-gradient(to bottom, #4a1620, #2a0a12) 0 8px / 95% 3px no-repeat,
-    linear-gradient(to bottom, #5a3a22, #2c1c10) 0 12px / 85% 3px no-repeat;
-  border-radius: 1px;
+    /* 책등 세로 결 */
+    repeating-linear-gradient(
+      to right,
+      transparent 0 2px,
+      rgba(0, 0, 0, 0.08) 2px 3px
+    ),
+    /* 좌우 음영 + 가운데 하이라이트 */
+    linear-gradient(
+      to right,
+      var(--dd) 0%,
+      var(--db) 20%,
+      var(--dh-color) 50%,
+      var(--db) 80%,
+      var(--dd) 100%
+    );
+  border-radius: 1px 2px 2px 1px;
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  z-index: 2;
+    inset 0 8px 10px -6px rgba(0, 0, 0, 0.55),
+    inset 0 -6px 8px -5px rgba(0, 0, 0, 0.55),
+    inset 1px 0 1px rgba(255, 255, 255, 0.04),
+    inset -1px 0 1px rgba(0, 0, 0, 0.4),
+    0 3px 6px rgba(0, 0, 0, 0.5);
+  position: relative;
+  pointer-events: none;
 }
 
-.bookshelf--study .bookshelf__shelf::after {
+/* 더미 책에 미세한 금박 띠 (책 종류 다양성) — 절반 정도만 */
+.book-dummy:nth-child(2n)::before {
   content: '';
   position: absolute;
-  bottom: 8px;
-  right: 8px;
-  width: 18px;
-  height: 22px;
-  background: linear-gradient(135deg, #6a4624, #2a1810);
-  border: 2px solid #1a1008;
-  border-radius: 2px;
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.4),
-    0 2px 4px rgba(0, 0, 0, 0.6);
-  z-index: 2;
+  left: 12%;
+  right: 12%;
+  top: 22%;
+  height: 1.5px;
+  background: rgba(180, 180, 180, 0.4);
+  opacity: 0.6;
+}
+.book-dummy:nth-child(3n)::after {
+  content: '';
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  top: 70%;
+  height: 1.5px;
+  background: rgba(160, 160, 160, 0.3);
+  opacity: 0.5;
 }
 
 /* ============================================================
  * 반응형
  * ============================================================ */
 @media (max-width: 1024px) {
-  .study {
-    grid-template-columns: 1fr 220px;
-    height: 440px;
-  }
-  .study__desk-area { height: 440px; }
-  .study__light-cone { width: 420px; height: 280px; }
-  .bookshelf--study .book {
-    --book-h: 96px !important;
-    --book-w: 40px !important;
+  .room { height: 480px; }
+  .bookshelf--wall .book {
+    --book-h: 88px !important;
+    --book-w: 38px !important;
   }
 }
 
 @media (max-width: 900px) {
-  .study {
-    grid-template-columns: 1fr 200px;
-    height: 420px;
-  }
-  .study__desk-area { height: 420px; }
-  .bookshelf--study .book {
-    --book-h: 86px !important;
-    --book-w: 38px !important;
+  .room { height: 440px; }
+  .bookshelf--wall .book {
+    --book-h: 80px !important;
+    --book-w: 34px !important;
   }
 }
 
@@ -844,5 +994,24 @@
  * prefers-reduced-motion
  * ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  .study__mug-steam span { animation: none; opacity: 0; }
+  .room__mug-steam span { animation: none; opacity: 0; }
+  .room--dark.room--hint .room__pendant-bulb { animation: none; }
+  .room__shelf,
+  .room--dark::after,
+  .room--lit::after,
+  .room__pendant-bulb,
+  .room__pendant-glow,
+  .room__pendant-cone,
+  .room__open-book,
+  .room__notepad,
+  .room__mug,
+  .room__wall-light,
+  .room__lamp-bulb,
+  .room__desk-light,
+  .room__hint { transition: none !important; }
 }
+
+/* ============================================================
+ * 기존 study variant 호환 stub (StudyScene 외부에서 쓸 일 없으므로 비워둠)
+ * 단 .bookshelf--study 자체는 bookshelf.css 에 영향 없도록 유지.
+ * ============================================================ */

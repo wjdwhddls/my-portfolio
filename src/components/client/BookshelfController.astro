@@ -164,6 +164,8 @@ const { projects } = Astro.props;
     renderContent(project, bookEl);
     captureFrom(bookEl);
     lockScroll();
+    // Lenis가 wheel을 가로채므로 모달 열려있는 동안 일시 정지 (배경 스크롤 방지)
+    (window).__lenis && (window).__lenis.stop();
 
     bookEl.classList.add('is-active');
     modal.showModal();
@@ -193,6 +195,8 @@ const { projects } = Astro.props;
       modal.removeEventListener('keydown', onFocusTrap);
       activeBookEl?.classList.remove('is-active');
       unlockScroll();
+      // Lenis 일시 정지 해제 — 시네마틱 ScrollTrigger 위치는 그대로 보존
+      (window).__lenis && (window).__lenis.start();
       try { lastFocused && lastFocused.focus(); } catch (_) {}
       activeBookEl = null;
     };

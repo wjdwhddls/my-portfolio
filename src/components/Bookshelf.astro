@@ -4,27 +4,40 @@
  *
  * variant:
  *  - 'default' : 가로로 넓은 단독 책장 (한 단 6권까지)
- *  - 'study'   : 키 큰 사이드 책장 (한 단 1~3권, 듬성듬성). 서재 씬용
+ *  - 'study'   : 키 큰 사이드 책장 (한 단 1~3권, 듬성듬성)
+ *  - 'wall'    : 좌측 벽 수평 책장 — 단마다 내 프로젝트 책 1권 + 좌우 더미 책으로
+ *               채워 자연스러운 진열. 내 책은 인터랙티브 + 하이라이트.
  */
 import type { Project } from '../data/projects';
-import { chunkIntoShelves, distributeForStudy } from '../data/bookshelf';
+import {
+  chunkIntoShelves,
+  distributeForStudy,
+  generateDummyBooks,
+} from '../data/bookshelf';
 import Book from './Book.astro';
 import BookModal from './BookModal.astro';
 import BookshelfController from './client/BookshelfController.astro';
 
 export interface Props {
   projects: Project[];
-  variant?: 'default' | 'study';
+  variant?: 'default' | 'study' | 'wall';
 }
 
 const { projects, variant = 'default' } = Astro.props;
-const shelves = variant === 'study' ? distributeForStudy(projects) : chunkIntoShelves(projects);
 const isStudy = variant === 'study';
+const isWall = variant === 'wall';
+const shelves = isStudy || isWall ? distributeForStudy(projects) : chunkIntoShelves(projects);
 
-const wrapClass = ['bookshelf-wrap', isStudy && 'bookshelf-wrap--study']
-  .filter(Boolean)
-  .join(' ');
-const shelfClass = ['bookshelf', isStudy && 'bookshelf--study'].filter(Boolean).join(' ');
+const wrapClass = [
+  'bookshelf-wrap',
+  isStudy && 'bookshelf-wrap--study',
+  isWall && 'bookshelf-wrap--wall',
+].filter(Boolean).join(' ');
+const shelfClass = [
+  'bookshelf',
+  isStudy && 'bookshelf--study',
+  isWall && 'bookshelf--wall',
+].filter(Boolean).join(' ');
 ---
 
 <div class={wrapClass}>
@@ -40,11 +53,31 @@ const shelfClass = ['bookshelf', isStudy && 'bookshelf--study'].filter(Boolean).
     <div class="bookshelf__inner">
       {shelves.map((shelfBooks, sIdx) => {
         const baseIdx = shelves.slice(0, sIdx).reduce((acc, s) => acc + s.length, 0);
+        // wall variant: 내 책 좌우에 더미 책 4-6권씩
+        const leftDummies = isWall ? generateDummyBooks(4, sIdx * 2 + 1) : [];
+        const rightDummies = isWall ? generateDummyBooks(5, sIdx * 2 + 2) : [];
         return (
           <div class="bookshelf__shelf" data-shelf-index={sIdx}>
             <div class="bookshelf__books">
+              {/* 좌측 더미 책 */}
+              {leftDummies.map((d) => (
+                <span
+                  class="book-dummy"
+                  aria-hidden="true"
+                  style={`--dw:${d.w}px;--dh:${d.h}px;--db:${d.base};--dd:${d.deep};--dh-color:${d.highlight};`}
+                ></span>
+              ))}
+              {/* 내 프로젝트 책 (하이라이트, 클릭 가능) */}
               {shelfBooks.map((p, idx) => (
                 <Book project={p} index={baseIdx + idx} />
+              ))}
+              {/* 우측 더미 책 */}
+              {rightDummies.map((d) => (
+                <span
+                  class="book-dummy"
+                  aria-hidden="true"
+                  style={`--dw:${d.w}px;--dh:${d.h}px;--db:${d.base};--dd:${d.deep};--dh-color:${d.highlight};`}
+                ></span>
               ))}
             </div>
             <div class="bookshelf__plank" aria-hidden="true"></div>
@@ -53,10 +86,10 @@ const shelfClass = ['bookshelf', isStudy && 'bookshelf--study'].filter(Boolean).
       })}
     </div>
 
-    {!isStudy && <div class="bookshelf__floor-shadow" aria-hidden="true"></div>}
+    {!isStudy && !isWall && <div class="bookshelf__floor-shadow" aria-hidden="true"></div>}
   </div>
 
-  {!isStudy && (
+  {!isStudy && !isWall && (
     <p class="bookshelf-hint" aria-hidden="true">
       📖 책을 클릭하면 펼쳐집니다
     </p>

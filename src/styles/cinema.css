@@ -1,0 +1,58 @@
+/* ============================================================
+ * Cinema — 일시적으로 wrapper 효과 비활성.
+ *
+ * 시네마틱 시퀀스를 작동시키려면 JS(cinematic-room.ts)가 페이지 로드 후
+ * `html.cinema-active` 클래스를 부여해야 한다. 그 전에는 wrapper가 자연
+ * 흐름으로 동작해 룸이 정상적으로 보인다.
+ *
+ * 검증을 통과한 뒤 시퀀스를 다시 살릴 때 JS에서 classList.add('cinema-active')
+ * 만 호출하면 220vh 스크롤 예산 + pin 컨테이너가 다시 활성화된다.
+ * ============================================================ */
+
+.cinema-section {
+  position: relative;
+}
+
+.cinema-pin {
+  position: relative;
+  width: 100%;
+}
+
+.cinema-stage {
+  position: relative;
+  will-change: transform, opacity;
+  /* 검증 단계: pointer-events 차단 안 함. 시퀀스 활성 시에만 차단. */
+}
+
+.cinema-vignette {
+  display: none;
+}
+
+/* ============================================================
+ * 풀 뷰포트 sticky pin 모드 — cinematic-room.ts 가 html.cinema-active 부여.
+ * 섹션이 200vh 의 스크롤 budget 을 가지고, 그 안의 pin 컨테이너가
+ * sticky 100vh 로 viewport 에 고정. 룸 자체가 100vw × 100vh 차지.
+ * ============================================================ */
+html.cinema-active .cinema-section {
+  min-height: 200vh;
+}
+html.cinema-active .cinema-pin {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+html.cinema-active .cinema-stage {
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+}
+html.cinema-active .cinema-vignette {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.cinema-active .cinema-section { min-height: 100vh; }
+}

@@ -233,7 +233,7 @@
     inset -2px 0 4px rgba(0, 0, 0, 0.4),
     0 6px 14px rgba(0, 0, 0, 0.45),
     0 0 0 2px rgb(var(--color-primary)),
-    0 0 18px rgba(99, 102, 241, 0.5);
+    0 0 18px rgba(255, 255, 255, 0.5);
 }
 
 .book.is-active {
@@ -291,7 +291,7 @@
     to bottom,
     transparent,
     var(--gold) 30%,
-    #fff8d6 50%,
+    #ffffff 50%,
     var(--gold) 70%,
     transparent
   );
@@ -377,6 +377,25 @@
 }
 
 /* ============================================================
+ * 시네마틱 룸 단계 3 진입 시 — 첫 책에 부여되는 idle pulse
+ * cinematic-room.ts 가 onUpdate에서 .book--featured 토글
+ * ============================================================ */
+.book.book--featured {
+  animation: bookPulse 2.4s ease-in-out infinite;
+}
+@keyframes bookPulse {
+  0%, 100% {
+    transform: translateZ(0) translateY(0) rotateY(-1.5deg);
+  }
+  50% {
+    transform: translateZ(14px) translateY(-4px) rotateY(0deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .book.book--featured { animation: none; }
+}
+
+/* ============================================================
  * Body scroll lock
  * ============================================================ */
 body.has-book-modal {
@@ -401,14 +420,15 @@ body.has-book-modal {
   inset: 0;
 
   /* 가죽 색 변수는 stage/cover/page에서 var(--leather-*)로 참조 */
-  --leather-base: #3b2418;
-  --leather-deep: #1d1108;
-  --leather-high: #5a3a26;
-  --gold: #d9b66b;
-  --page-bg: #f5ecd6;
-  --page-bg-shadow: #d9c89f;
-  --ink: #2b2218;
-  --ink-soft: #5a4a32;
+  /* 흑백 모달 톤 — 가죽 갈색·노란 금박을 모노톤으로 환원 */
+  --leather-base: #2a2a2a;
+  --leather-deep: #141414;
+  --leather-high: #3e3e3e;
+  --gold: #e5e5e5;
+  --page-bg: #f5f5f5;            /* 차가운 오프화이트 페이지 */
+  --page-bg-shadow: #d4d4d4;
+  --ink: #1a1a1a;                /* 페이지 본문 잉크 */
+  --ink-soft: #525252;
 }
 
 .book-modal[open] {
@@ -495,7 +515,7 @@ body.has-book-modal {
     linear-gradient(
       to bottom,
       var(--page-bg) 0%,
-      #ede0c2 100%
+      #e7e7e7 100%
     );
   padding: 36px 38px;
   overflow: hidden;
@@ -600,7 +620,7 @@ body.has-book-modal {
 
 .book-modal__cover-face--inside {
   transform: rotateY(180deg);
-  background: linear-gradient(135deg, #f0e3c4, #e2d3ad);
+  background: linear-gradient(135deg, #ededed, #d4d4d4);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
 
@@ -632,7 +652,7 @@ body.has-book-modal {
     to bottom,
     transparent,
     var(--gold) 35%,
-    #fff8d6 50%,
+    #ffffff 50%,
     var(--gold) 65%,
     transparent
   );

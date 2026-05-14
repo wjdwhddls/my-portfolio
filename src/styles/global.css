@@ -1,6 +1,7 @@
 @import './tokens.css';
 @import './bookshelf.css';
 @import './study-scene.css';
+@import './cinema.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -68,7 +69,7 @@ body::before {
   width: 300px;
   height: 300px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
   pointer-events: none;
   z-index: 9998;
   transform: translate(-50%, -50%);
@@ -79,7 +80,7 @@ body::before {
  * 배경 패턴
  * ============================================================ */
 .dot-pattern {
-  background-image: radial-gradient(circle, rgba(99, 102, 241, 0.15) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
   background-size: 30px 30px;
 }
 
@@ -97,7 +98,7 @@ body::before {
   background: rgba(30, 41, 59, 0.5);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   transition: all 0.4s ease;
 }
 
@@ -233,12 +234,13 @@ body::before {
   margin-right: 1em;
 }
 
-.code-keyword { color: #c084fc; }
-.code-function { color: #60a5fa; }
-.code-string { color: #34d399; }
-.code-comment { color: #4b5563; }
-.code-variable { color: #f9a8d4; }
-.code-bracket { color: #fbbf24; }
+/* 흑백 톤 — 컬러 대신 굵기·스타일 차등으로 의미 위계 표현 */
+.code-keyword  { color: #ffffff; font-weight: 600; }
+.code-function { color: #d4d4d8; font-weight: 500; }
+.code-string   { color: #a1a1aa; }
+.code-comment  { color: #525252; font-style: italic; }
+.code-variable { color: #e5e5e5; }
+.code-bracket  { color: #71717a; }
 
 .code-line {
   opacity: 0;
@@ -249,7 +251,7 @@ body::before {
  * 입력 폼 글로우
  * ============================================================ */
 .input-glow:focus {
-  box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.18);
 }
 
 /* ============================================================

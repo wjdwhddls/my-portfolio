@@ -31,7 +31,7 @@ const updateNavbar = () => {
   if (!navbar) return;
   if (window.scrollY > 50) {
     navbar.classList.add('glass');
-    navbar.style.borderBottom = '1px solid rgba(99, 102, 241, 0.1)';
+    navbar.style.borderBottom = '1px solid rgba(255, 255, 255, 0.08)';
   } else {
     navbar.classList.remove('glass');
     navbar.style.borderBottom = 'none';
@@ -98,13 +98,26 @@ if (glow && !reduceMotion) {
 }
 
 // ── 7. 부드러운 스크롤 (앵커) ────────────────────────────────
+// Lenis가 활성화되어 있으면 lenis.scrollTo로 통일 (시네마틱 ScrollTrigger와 호환).
+// reduce-motion 시 Lenis가 생성되지 않으므로 자동 native fallback.
+type LenisLike = {
+  scrollTo: (target: HTMLElement | number, options?: { offset?: number }) => void;
+};
+function getLenis(): LenisLike | null {
+  return (window as unknown as { __lenis: LenisLike | null }).__lenis;
+}
+
 document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((anchor) => {
   anchor.addEventListener('click', (e) => {
     const href = anchor.getAttribute('href') ?? '';
     if (href.length <= 1) return;
-    const target = document.querySelector(href);
-    if (target) {
-      e.preventDefault();
+    const target = document.querySelector<HTMLElement>(href);
+    if (!target) return;
+    e.preventDefault();
+    const lenis = getLenis();
+    if (lenis) {
+      lenis.scrollTo(target, { offset: -64 /* navbar 보정 */ });
+    } else {
       target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
     }
   });
@@ -113,9 +126,11 @@ document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((anchor) =>
 // ── 8. scroll-to-top 버튼 ────────────────────────────────────
 const scrollTopBtn = document.getElementById('scroll-top');
 if (scrollTopBtn) {
-  scrollTopBtn.addEventListener('click', () =>
-    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' }),
-  );
+  scrollTopBtn.addEventListener('click', () => {
+    const lenis = getLenis();
+    if (lenis) lenis.scrollTo(0);
+    else window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+  });
 }
 const updateScrollTop = () => {
   if (!scrollTopBtn) return;
