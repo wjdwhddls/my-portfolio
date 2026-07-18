@@ -15,6 +15,26 @@ export function init(): void {
   const hero = document.getElementById('home');
   if (!hero) return;
 
+  // 히어로 위에 다이브 섹션이 있으면(데스크톱) 히어로가 보일 때 인트로 시작
+  const rect = hero.getBoundingClientRect();
+  if (rect.top > window.innerHeight * 0.6) {
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          io.disconnect();
+          build(hero);
+        }
+      },
+      { threshold: 0.25 },
+    );
+    io.observe(hero);
+    return;
+  }
+  build(hero);
+}
+
+function build(hero: HTMLElement): void {
+
   const q = (sel: string) => hero.querySelector<HTMLElement>(sel);
   const greeting = q('[data-hero="greeting"]');
   const name = q('[data-hero="name"]');

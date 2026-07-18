@@ -197,7 +197,9 @@ export function init(canvas: HTMLCanvasElement): void {
     uniforms.uMouse.value.lerp(mouseTarget, 0.06);
 
     // 스크롤 진행 → 카메라 상승 + 페이드 아웃
-    const progress = Math.min(1, window.scrollY / (hero.offsetHeight * 0.85));
+    // (다이브 섹션이 위에 있어도 동작하도록 히어로 자신의 화면 위치 기준으로 계산)
+    const heroRect = hero.getBoundingClientRect();
+    const progress = Math.min(1, Math.max(0, -heroRect.top / (heroRect.height * 0.85)));
     uniforms.uFade.value = intro.fade * (1 - progress * 0.95);
 
     camera.position.x += (parallaxTarget.x * 1.4 - camera.position.x) * 0.04;

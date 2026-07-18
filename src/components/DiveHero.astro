@@ -1,0 +1,190 @@
+---
+/**
+ * 다이브 히어로 — 서재 씬에서 맥북 화면 속으로 줌인하는 랜딩 (데스크톱 전용).
+ * 연출 로직은 src/scripts/dive-hero.ts, 줌 좌표/수학도 그쪽 참고.
+ * 모바일·reduced-motion에서는 섹션이 숨겨지고 기존 Hero가 랜딩이 된다.
+ */
+// BASE_URL은 trailingSlash 설정에 따라 끝 슬래시가 없을 수 있다
+const rawBase = import.meta.env.BASE_URL;
+const base = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
+---
+
+<!-- 데스크톱에서만 이미지 프리로드 -->
+<link
+  rel="preload"
+  as="image"
+  href={`${base}study-scene-3200.webp`}
+  media="(min-width: 768px)"
+/>
+
+<section id="dive" class="hidden md:block" aria-label="인트로 — 서재에서 화면 속으로">
+  <div class="dive-pin">
+    <div class="dive-scene">
+      <img
+        class="dive-img"
+        src={`${base}study-scene-3200.webp`}
+        srcset={`${base}study-scene-1600.webp 1600w, ${base}study-scene-3200.webp 3200w`}
+        sizes="100vw"
+        alt="비 내리는 밤, 코드 에디터가 켜진 노트북이 놓인 어두운 서재 책상"
+        loading="eager"
+        fetchpriority="high"
+      />
+
+      <!-- 노트북 화면 rect에 정렬되는 콘텐츠 레이어 (JS가 위치/크기 지정) -->
+      <div class="dive-screen" aria-hidden="true">
+        <div class="dive-screen-inner">
+          <div class="dive-screen-content">
+            <p class="dive-eyebrow">AI ENGINEER · BACKEND DEVELOPER</p>
+            <p class="dive-name gradient-text">정종인</p>
+            <p class="dive-tagline">실세계 문제를 AI와 엔지니어링으로 풉니다<span class="dive-caret"></span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 비네트 -->
+    <div class="dive-vignette" aria-hidden="true"></div>
+
+    <!-- 시작 캡션 + 스크롤 힌트 -->
+    <div class="dive-caption" aria-hidden="true">
+      <p class="dive-caption-title">밤의 서재</p>
+      <p class="dive-caption-sub">스크롤을 내려 화면 속으로 들어가 보세요</p>
+      <span class="scroll-hint-line"></span>
+    </div>
+
+    <!-- 종료 블랙 페이드 (히어로 전환용) -->
+    <div class="dive-fade" aria-hidden="true"></div>
+  </div>
+</section>
+
+<style>
+  #dive {
+    height: 340vh;
+    position: relative;
+  }
+
+  .dive-pin {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .dive-scene {
+    position: absolute;
+    inset: 0;
+    will-change: transform;
+  }
+
+  .dive-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    will-change: transform;
+  }
+
+  .dive-screen {
+    position: absolute; /* left/top/size는 JS가 지정 */
+    overflow: hidden;
+    border-radius: 6px;
+  }
+
+  .dive-screen-inner {
+    position: absolute;
+    opacity: 0; /* 줌 중반에 크로스페이드로 등장 */
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dive-screen-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  .dive-eyebrow {
+    color: rgb(var(--color-ink-subtle));
+    letter-spacing: 0.45em;
+    font-size: 0.875rem;
+  }
+
+  .dive-name {
+    font-size: clamp(4rem, 10vw, 8rem);
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .dive-tagline {
+    color: rgb(var(--color-ink-muted));
+    font-size: 1.25rem;
+  }
+
+  .dive-caret {
+    display: inline-block;
+    width: 2px;
+    height: 1.1em;
+    margin-left: 6px;
+    vertical-align: text-bottom;
+    background: rgb(var(--color-primary));
+    animation: dive-caret-blink 1.1s steps(1) infinite;
+  }
+  @keyframes dive-caret-blink {
+    50% { opacity: 0; }
+  }
+
+  .dive-vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 52%, rgba(0, 0, 0, 0.55) 100%);
+  }
+
+  .dive-caption {
+    position: absolute;
+    left: 50%;
+    bottom: 3rem;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: center;
+  }
+
+  .dive-caption-title {
+    font-size: 0.8rem;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .dive-caption-sub {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .dive-fade {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* 모션 감소 선호 시 다이브 자체를 제거 — Hero가 랜딩 */
+  @media (prefers-reduced-motion: reduce) {
+    #dive { display: none; }
+  }
+</style>
+
+<script>
+  import { init } from '../scripts/dive-hero';
+  init();
+</script>
