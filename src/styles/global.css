@@ -298,6 +298,41 @@ body::before {
   pointer-events: none;
 }
 
+/* 히어로 3D 씬 (Three.js) — 파티클과 동일한 풀커버 배경 */
+#hero-scene {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* 히어로 스크롤 힌트 — 아래로 흐르는 라인 */
+.scroll-hint-line {
+  display: block;
+  width: 1px;
+  height: 48px;
+  overflow: hidden;
+  position: relative;
+  background: rgba(255, 255, 255, 0.12);
+}
+.scroll-hint-line::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 50%;
+  background: linear-gradient(180deg, transparent, #ffffff);
+  animation: scroll-hint-flow 2s ease-in-out infinite;
+}
+@keyframes scroll-hint-flow {
+  0%   { transform: translateY(-100%); }
+  60%  { transform: translateY(200%); }
+  100% { transform: translateY(200%); }
+}
+
 /* ============================================================
  * 접근성 — focus-visible
  * ============================================================ */
@@ -321,6 +356,7 @@ body::before {
   .typing-text { border-right: none; }
   #cursor-glow { display: none; }
   #particles { display: none; }
+  #hero-scene { display: none; }
 }
 
 /* ============================================================

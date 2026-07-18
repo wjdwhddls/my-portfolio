@@ -6,7 +6,7 @@
  * - 배경: 파티클 canvas + 두 개의 부유 blob
  */
 import { profile } from '../data/profile';
-import ParticleCanvas from './client/ParticleCanvas.astro';
+import HeroScene from './client/HeroScene.astro';
 import TypingText from './client/TypingText.astro';
 ---
 
@@ -14,8 +14,8 @@ import TypingText from './client/TypingText.astro';
   id="home"
   class="min-h-screen flex items-center justify-center relative overflow-hidden pt-20"
 >
-  <!-- 파티클 -->
-  <ParticleCanvas />
+  <!-- 3D 파티클 웨이브 (Three.js) -->
+  <HeroScene />
 
   <!-- 배경 그라데이션 blob -->
   <div class="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
@@ -29,27 +29,27 @@ import TypingText from './client/TypingText.astro';
   <div class="max-w-6xl mx-auto px-4 py-20 relative z-10">
     <div class="grid md:grid-cols-2 gap-12 items-center">
       <!-- 좌측 -->
-      <div class="space-y-6 fade-in-up">
-        <p class="text-primary-hover font-medium text-lg">안녕하세요 👋</p>
+      <div class="space-y-6">
+        <p class="text-primary-hover font-medium text-lg" data-hero="greeting">안녕하세요 👋</p>
 
         <h1 class="text-5xl md:text-7xl font-bold leading-tight tracking-tightish">
-          <span class="gradient-text">{profile.name}</span>
+          <span class="gradient-text" data-hero="name">{profile.name}</span>
         </h1>
 
-        <div class="h-16 flex items-center">
+        <div class="h-16 flex items-center" data-hero="typing">
           <span class="text-2xl md:text-3xl text-ink-muted">
             <TypingText phrases={profile.typingPhrases} />
           </span>
         </div>
 
-        <p class="text-ink-muted text-lg leading-relaxed max-w-lg">
+        <p class="text-ink-muted text-lg leading-relaxed max-w-lg" data-hero="intro">
           {profile.intro}
         </p>
 
-        <div class="flex flex-wrap gap-3 pt-8 slide-in-left" style="animation-delay: 0.3s;">
+        <div class="flex flex-wrap gap-3 pt-8" data-hero="cta">
           <a
             href="#projects"
-            class="magnetic-btn btn-ripple px-8 py-3 bg-primary hover:bg-primary-hover rounded-lg font-medium transition-colors"
+            class="magnetic-btn btn-ripple px-8 py-3 bg-primary hover:bg-primary-hover text-black rounded-lg font-medium transition-colors"
           >
             프로젝트 보기
           </a>
@@ -76,7 +76,7 @@ import TypingText from './client/TypingText.astro';
 
       <!-- 우측: 코드 에디터 mock -->
       <div class="hidden md:flex justify-center items-center">
-        <div class="relative w-full max-w-md">
+        <div class="relative w-full max-w-md" data-hero="editor">
           <div class="absolute inset-0 bg-gradient-to-br from-primary to-accent rounded-2xl blur-2xl opacity-15 float-animate"></div>
           <div class="glass rounded-2xl overflow-hidden">
             <div class="flex items-center gap-2 px-4 py-3 border-b border-border/50">
@@ -146,4 +146,19 @@ import TypingText from './client/TypingText.astro';
       </div>
     </div>
   </div>
+
+  <!-- 스크롤 힌트 -->
+  <div
+    data-hero="scroll-hint"
+    class="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 flex-col items-center gap-2 text-ink-subtle"
+    aria-hidden="true"
+  >
+    <span class="text-xs tracking-[0.3em] uppercase">Scroll</span>
+    <span class="scroll-hint-line"></span>
+  </div>
+
+  <script>
+    import { init } from '../scripts/hero-intro';
+    init();
+  </script>
 </section>

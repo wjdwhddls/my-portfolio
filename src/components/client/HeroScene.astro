@@ -1,0 +1,20 @@
+---
+/**
+ * 히어로 3D 배경 (Three.js) 마운트 컴포넌트.
+ * - 씬 본체는 hero-scene.ts — dynamic import로 별도 청크 분리 (초기 페인트 보호)
+ * - prefers-reduced-motion 시 로드 자체를 생략 (global.css가 캔버스 비노출 처리)
+ */
+---
+
+<canvas id="hero-scene" aria-hidden="true"></canvas>
+
+<script>
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const canvas = document.getElementById('hero-scene') as HTMLCanvasElement | null;
+
+  if (!reduceMotion && canvas) {
+    import('../../scripts/hero-scene')
+      .then((m) => m.init(canvas))
+      .catch((err) => console.error('[hero-scene] load failed', err));
+  }
+</script>
