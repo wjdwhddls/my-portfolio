@@ -202,10 +202,10 @@ function trySetup(): boolean {
       }
     }
 
-    // 확산 렌더 루프 (~1.5s 후 자체 정리)
+    // 확산 렌더 루프 (~1.9s 후 자체 정리) — 커튼이 걷히는 동안에도 광점이 날아다닌다
     const t0 = performance.now();
     const loop = (now: number) => {
-      const t = (now - t0) / 1500;
+      const t = (now - t0) / 1900;
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
       if (t >= 1) {
         overlay.remove();
@@ -247,33 +247,48 @@ function trySetup(): boolean {
     // 3) Welcome
     if (welcome) boot.to(welcome, { opacity: 1, y: 0, duration: 0.22, ease: 'power1.out' }, '>+0.35');
 
-    // 4) 터미널이 광점으로 분해 → 배경 버스트 → 히어로로 자동 진입
+    // 4) 터미널이 그 자리에서 광점으로 분해 → 커튼 뒤에서 즉시 히어로로 점프
+    //    → 광점이 날아다니는 동안 커튼이 걷히며 조립된 페이지가 드러난다
+    //    (스크롤 이동이 눈에 보이지 않아 "페이지가 갈라지는" 느낌이 없다)
     boot.call(
       () => {
         dissolveTerminal();
-        // DOM 터미널은 즉시 사라지고 (광점이 그 자리를 이어받음) 다이브도 걷힌다
-        gsap.to(terminal, { opacity: 0, scale: 1.03, duration: 0.22, ease: 'power1.out' });
-        gsap.to(pin, { opacity: 0, duration: 0.9, ease: 'power1.inOut' });
+        // DOM 터미널은 즉시 사라지고 광점이 그 자리를 이어받는다
+        gsap.to(terminal, { opacity: 0, duration: 0.15, ease: 'power1.out' });
+
+        // 터미널 배경과 같은 검정 커튼 — 이 뒤에서 스크롤을 순간 이동시킨다
+        const curtain = document.createElement('div');
+        curtain.style.cssText = 'position:fixed;inset:0;background:#000;z-index:50;pointer-events:none;';
+        document.body.appendChild(curtain);
+
+        const hero = document.getElementById('home');
+        const l = getLenis();
+        l?.start();
+        if (hero) {
+          if (l) l.scrollTo(hero, { immediate: true, force: true });
+          else window.scrollTo(0, hero.getBoundingClientRect().top + window.scrollY);
+        }
 
         // 전역 파티클 버스트 (0.84→1 구간을 시간으로 재생)
         const proxy = { p: 0.84 };
         gsap.to(proxy, {
           p: 1,
-          duration: 1.5,
+          duration: 1.6,
           ease: 'power1.inOut',
           onUpdate: () => {
             window.dispatchEvent(new CustomEvent('dive:progress', { detail: proxy.p }));
           },
         });
 
-        // 히어로로 자동 스크롤 — 광점이 정착하며 페이지가 "만들어진다"
-        const hero = document.getElementById('home');
-        const l = getLenis();
-        l?.start();
-        if (hero) {
-          if (l) l.scrollTo(hero, { duration: 1.6, force: true });
-          else hero.scrollIntoView({ behavior: 'smooth' });
-        }
+        // 광점이 퍼지는 동안 커튼이 걷히며 페이지가 "만들어진다"
+        gsap.to(curtain, {
+          opacity: 0,
+          duration: 1.0,
+          delay: 0.35,
+          ease: 'power1.inOut',
+          onComplete: () => curtain.remove(),
+        });
+
         bootDone = true;
       },
       [],
