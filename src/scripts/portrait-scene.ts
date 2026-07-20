@@ -170,9 +170,16 @@ export function init(canvas: HTMLCanvasElement, imageUrl: string): void {
     requestAnimationFrame(tick);
     if (!pageVisible || stars.length === 0) return;
 
-    // 히어로 이탈 스크롤 진행 → 산란 정도
+    // 산란 정도 — 히어로가 아직 아래에 있으면(진입 전) 흩어진 상태로 대기하다가
+    // 진입하며 조립되고, 히어로를 지나 이탈할 때 다시 흩어진다
     const heroRect = hero.getBoundingClientRect();
-    const scatter = Math.min(1, Math.max(0, -heroRect.top / (heroRect.height * 0.7)));
+    const vh = window.innerHeight;
+    let scatter: number;
+    if (heroRect.top > vh * 0.55) {
+      scatter = Math.min(1, (heroRect.top - vh * 0.55) / (vh * 0.45));
+    } else {
+      scatter = Math.min(1, Math.max(0, -heroRect.top / (heroRect.height * 0.7)));
+    }
 
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#fff';
