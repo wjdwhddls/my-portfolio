@@ -41,7 +41,7 @@ const base = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
               <span class="dive-terminal-title">jongin@macbook — zsh</span>
             </div>
             <div class="dive-terminal-body">
-              <p class="boot-line"><span class="boot-prompt">jongin@macbook ~ %</span> ./portfolio --start</p>
+              <p class="boot-line boot-line-cmd"><span class="boot-prompt">jongin@macbook ~ %</span> <span class="boot-typed">./portfolio --start</span><span class="boot-type-caret"></span></p>
               <p class="boot-line"><span class="boot-ok">[ OK ]</span> 프로필 로드 완료 — 정종인 (AI Agent Engineer)</p>
               <p class="boot-line"><span class="boot-ok">[ OK ]</span> 프로젝트 3건 마운트</p>
               <p class="boot-line"><span class="boot-ok">[ OK ]</span> 뉴럴 엔진 기동</p>
@@ -62,8 +62,6 @@ const base = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
       <span class="scroll-hint-line"></span>
     </div>
 
-    <!-- 종료 블랙 페이드 (히어로 전환용) -->
-    <div class="dive-fade" aria-hidden="true"></div>
   </div>
 </section>
 
@@ -157,6 +155,16 @@ const base = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
     transform: translateY(8px);
   }
 
+  /* 명령 타이핑용 커서 — 타이핑 완료 후 JS가 숨김 */
+  .boot-type-caret {
+    display: inline-block;
+    width: 7px;
+    height: 1em;
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    background: rgb(var(--color-primary));
+  }
+
   .boot-prompt { color: rgb(var(--color-ink-subtle)); }
   .boot-ok { color: rgb(var(--color-primary)); font-weight: 500; }
   .boot-welcome { color: rgb(var(--color-ink)); margin-top: 0.35rem; }
@@ -203,14 +211,6 @@ const base = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
   .dive-caption-sub {
     font-size: 0.85rem;
     color: rgba(255, 255, 255, 0.55);
-  }
-
-  .dive-fade {
-    position: absolute;
-    inset: 0;
-    background: #000;
-    opacity: 0;
-    pointer-events: none;
   }
 
   /* 모션 감소 선호 시 다이브 자체를 제거 — Hero가 랜딩 */

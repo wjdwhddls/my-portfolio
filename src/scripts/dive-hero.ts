@@ -55,8 +55,23 @@ function trySetup(): boolean {
   const screenEl = section.querySelector<HTMLElement>('.dive-screen');
   const inner = section.querySelector<HTMLElement>('.dive-screen-inner');
   const caption = section.querySelector<HTMLElement>('.dive-caption');
-  const fade = section.querySelector<HTMLElement>('.dive-fade');
-  if (!scene || !img || !screenEl || !inner || !caption || !fade) return true;
+  const pin = section.querySelector<HTMLElement>('.dive-pin');
+  if (!scene || !img || !screenEl || !inner || !caption || !pin) return true;
+
+  // 명령 문자열을 글자 스팬으로 분해 — 스크롤에 맞춰 한 글자씩 타이핑
+  const typed = section.querySelector<HTMLElement>('.boot-typed');
+  let typedChars: HTMLElement[] = [];
+  if (typed) {
+    const text = typed.textContent ?? '';
+    typed.textContent = '';
+    typedChars = Array.from(text).map((ch) => {
+      const span = document.createElement('span');
+      span.textContent = ch;
+      span.style.opacity = '0';
+      typed.appendChild(span);
+      return span;
+    });
+  }
 
   let S = 4;
   let dx = 0;
@@ -106,9 +121,18 @@ function trySetup(): boolean {
       end: 'bottom bottom',
       scrub: 0.6,
       invalidateOnRefresh: true,
+      // 전역 파티클 씬에 진행도 전달 — 마지막 구간 "광점 버스트" 연출용
+      onUpdate: (self) => {
+        window.dispatchEvent(new CustomEvent('dive:progress', { detail: self.progress }));
+      },
     },
     defaults: { ease: 'none' },
   });
+
+  const cmdLine = section.querySelector<HTMLElement>('.boot-line-cmd');
+  const okLines = section.querySelectorAll<HTMLElement>('.boot-line:not(.boot-line-cmd):not(.boot-welcome)');
+  const welcome = section.querySelector<HTMLElement>('.boot-welcome');
+  const typeCaret = section.querySelector<HTMLElement>('.boot-type-caret');
 
   tl
     // 캡션은 초입에서 사라짐
@@ -116,11 +140,24 @@ function trySetup(): boolean {
     // 씬 줌 — 가속 이징으로 "빨려 들어가는" 감각
     .to(scene, { scale: () => S, x: () => dx, y: () => dy, duration: 1, ease: 'power2.in' }, 0)
     // 노트북 화면 콘텐츠 크로스페이드 (베이크된 IDE → 실제 DOM)
-    .to(inner, { opacity: 1, duration: 0.25 }, 0.38)
-    // 부팅 로그 — 줌이 깊어질수록 순차 출력
-    .to(section.querySelectorAll('.boot-line'), { opacity: 1, y: 0, duration: 0.06, stagger: 0.075 }, 0.48)
-    // 마지막 — 블랙 페이드로 다음 섹션(히어로)과 이음새 없이 연결
-    .to(fade, { opacity: 1, duration: 0.1 }, 0.9);
+    .to(inner, { opacity: 1, duration: 0.2 }, 0.36);
+
+  // 1) 프롬프트 줄 등장 → 명령이 한 글자씩 타이핑
+  if (cmdLine) tl.to(cmdLine, { opacity: 1, y: 0, duration: 0.03 }, 0.42);
+  if (typedChars.length)
+    tl.to(typedChars, { opacity: 1, duration: 0.004, stagger: 0.0075 }, 0.45);
+  if (typeCaret) tl.to(typeCaret, { opacity: 0, duration: 0.01 }, 0.6);
+
+  // 2) [ OK ] 로그가 한 줄씩
+  if (okLines.length)
+    tl.to(okLines, { opacity: 1, y: 0, duration: 0.05, stagger: 0.09 }, 0.62);
+
+  // 3) Welcome
+  if (welcome) tl.to(welcome, { opacity: 1, y: 0, duration: 0.05 }, 0.84);
+
+  // 4) 다이브 레이어가 투명해지며 뒤의 광점(전역 파티클)이 화면 전체로 드러남
+  //    — 파티클 버스트는 dive:progress 이벤트를 받은 global-scene이 담당
+  tl.to(pin, { opacity: 0, duration: 0.1 }, 0.89);
 
   /* ---------- idle 모션 — 브리딩 + 마우스 패럴랙스 (img에만 적용해 줌과 분리) ---------- */
   gsap.to(img, { scale: 1.045, duration: 9, yoyo: true, repeat: -1, ease: 'sine.inOut' });

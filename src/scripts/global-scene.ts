@@ -26,6 +26,7 @@ const VERTEX_SHADER = /* glsl */ `
   uniform vec2 uMouse;       // 포인터 월드 XZ
   uniform float uPixelRatio;
   uniform float uShape;      // 0 회로기판, 1 로드맵, 2 칩 코어, 3 CPU 수렴 (연속값)
+  uniform float uBurst;      // 다이브→히어로 전환 버스트 (0~1) — 광점 전면 산란
   attribute float aRand;
   attribute float aPulse;    // 트레이스 위 누적 위치 (0~1) — 데이터 펄스 위상
   attribute vec3 aRoad;
@@ -55,6 +56,9 @@ const VERTEX_SHADER = /* glsl */ `
     float act = f * (1.0 - f) * 4.0;
     vec3 dir = normalize(vec3(aRand - 0.5, fract(aRand * 7.31) - 0.5, fract(aRand * 3.17) - 0.5) + 0.0001);
     p += dir * act * (1.5 + aRand * 2.0);
+
+    // ── 다이브 종료 버스트 — 광점이 화면 전체로 확 퍼졌다가 재정착
+    p += dir * uBurst * (5.0 + aRand * 9.0);
 
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
@@ -497,7 +501,18 @@ export function init(canvas: HTMLCanvasElement): void {
     uPixelRatio: { value: pixelRatio },
     uShape: { value: 0 },
     uFade: { value: 0 },
+    uBurst: { value: 0 },
   };
+
+  // 다이브 마지막 구간 — 광점이 화면 전체로 확 퍼졌다가(버스트) 기판으로 재정착
+  const smooth = (a: number, b: number, x: number) => {
+    const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+    return t * t * (3 - 2 * t);
+  };
+  window.addEventListener('dive:progress', (e) => {
+    const p = (e as CustomEvent<number>).detail;
+    uniforms.uBurst.value = smooth(0.84, 0.93, p) * (1 - smooth(0.93, 1.0, p));
+  });
 
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX_SHADER,
