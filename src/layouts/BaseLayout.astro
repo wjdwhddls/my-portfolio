@@ -8,6 +8,7 @@
  */
 import '../styles/global.css';
 import GlobalScene from '../components/client/GlobalScene.astro';
+import TerminalHud from '../components/client/TerminalHud.astro';
 import { profile, links } from '../data/profile';
 
 export interface Props {
@@ -98,6 +99,9 @@ const personJsonLd = {
   <body class="bg-bg text-ink">
     <!-- 전역 모핑 3D 배경 (섹션에 따라 파티클이 형태를 바꾼다) -->
     <GlobalScene />
+
+    <!-- 터미널 내러티브 HUD (섹션 진입마다 셸 명령 타이핑) -->
+    <TerminalHud />
 
     <!-- 스크롤 진행 바 -->
     <div id="scroll-progress" aria-hidden="true"></div>

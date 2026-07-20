@@ -1,0 +1,63 @@
+---
+/**
+ * 터미널 내러티브 HUD — BaseLayout에서 마운트.
+ * 섹션 진입마다 좌하단에 셸 명령이 타이핑된다 (terminal-hud.ts).
+ */
+---
+
+<div id="terminal-hud" class="hidden md:flex" aria-hidden="true">
+  <span class="hud-prompt">jongin@macbook&nbsp;~&nbsp;%</span>
+  <span class="hud-cmd"></span>
+  <span class="hud-caret"></span>
+</div>
+
+<style>
+  #terminal-hud {
+    position: fixed;
+    left: 1.5rem;
+    bottom: 1.5rem;
+    z-index: 40;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.9rem;
+    border-radius: 10px;
+    background: rgba(10, 10, 10, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  #terminal-hud.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .hud-prompt {
+    color: rgb(var(--color-ink-subtle));
+  }
+
+  .hud-cmd {
+    color: rgb(var(--color-ink));
+  }
+
+  .hud-caret {
+    width: 6px;
+    height: 0.95em;
+    background: rgb(var(--color-primary));
+    animation: hud-caret-blink 1.1s steps(1) infinite;
+  }
+
+  @keyframes hud-caret-blink {
+    50% { opacity: 0; }
+  }
+</style>
+
+<script>
+  import { init } from '../../scripts/terminal-hud';
+  init();
+</script>
