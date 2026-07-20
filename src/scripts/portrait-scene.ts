@@ -170,12 +170,13 @@ export function init(canvas: HTMLCanvasElement, imageUrl: string): void {
     requestAnimationFrame(tick);
     if (!pageVisible || stars.length === 0) return;
 
-    // 산란 정도 — 히어로가 아직 아래에 있으면(진입 전) 흩어진 상태로 대기하다가
-    // 진입하며 조립되고, 히어로를 지나 이탈할 때 다시 흩어진다
+    // 산란 정도 — 히어로가 아직 아래에 있으면(진입 전) 터미널 쪽(화면 왼쪽)에서
+    // 흘러들어오며 조립되고, 히어로를 지나 이탈할 때는 사방으로 흩어진다
     const heroRect = hero.getBoundingClientRect();
     const vh = window.innerHeight;
     let scatter: number;
-    if (heroRect.top > vh * 0.55) {
+    const entering = heroRect.top > vh * 0.55;
+    if (entering) {
       scatter = Math.min(1, (heroRect.top - vh * 0.55) / (vh * 0.45));
     } else {
       scatter = Math.min(1, Math.max(0, -heroRect.top / (heroRect.height * 0.7)));
@@ -189,8 +190,18 @@ export function init(canvas: HTMLCanvasElement, imageUrl: string): void {
 
     for (const s of stars) {
       // 산란이 섞인 목표점
-      const tx = s.hx + s.dirX * spread;
-      const ty = s.hy + s.dirY * spread;
+      let tx: number;
+      let ty: number;
+      if (entering) {
+        // 진입 전에는 터미널이 있던 화면 중앙-왼쪽에서 흘러들어온다
+        const srcX = -W * 0.8 + s.dirX * W * 0.35;
+        const srcY = H * 0.5 + s.dirY * H * 0.6;
+        tx = s.hx + (srcX - s.hx) * scatter;
+        ty = s.hy + (srcY - s.hy) * scatter;
+      } else {
+        tx = s.hx + s.dirX * spread;
+        ty = s.hy + s.dirY * spread;
+      }
 
       // 스프링 복원
       s.vx += (tx - s.x) * 0.045;

@@ -180,23 +180,25 @@ function trySetup(): boolean {
 
     const parts: DissolveP[] = [];
     const STEP = 2;
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
     for (let gy = 0; gy < off.height; gy += STEP) {
       for (let gx = 0; gx < off.width; gx += STEP) {
         const alpha = data[(gy * off.width + gx) * 4 + 3];
         if (alpha < 40) continue;
         const x = rect.left + gx / SCALE;
         const y = rect.top + gy / SCALE;
-        // 살짝 쪼개지는 정도의 부드러운 산개 (폭죽 X)
-        const ang = Math.random() * Math.PI * 2;
-        const speed = 0.6 + Math.random() * 1.6;
+        // 터미널 중심에서 화면 전체로 또렷하게 퍼지는 산개
+        const ang = Math.atan2(y - cy, x - cx) + (Math.random() - 0.5) * 1.2;
+        const speed = 2.5 + Math.random() * 5.5;
         parts.push({
           x,
           y,
           vx: Math.cos(ang) * speed,
-          vy: Math.sin(ang) * speed - 0.3,
+          vy: Math.sin(ang) * speed - 0.4,
           tx: x,
           ty: y,
-          a: 0.5 + Math.random() * 0.5,
+          a: 0.75 + Math.random() * 0.25,
           s: 1 + Math.random() * 1.6,
         });
       }
@@ -265,8 +267,8 @@ function trySetup(): boolean {
     if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const DURATION = 2300;
-    const SPLIT = 0.32; // 이 시점까지는 쪼개짐, 이후 목적지로 수렴
+    const DURATION = 2600;
+    const SPLIT = 0.42; // 이 시점까지는 화면 전체로 퍼지고, 이후 목적지로 수렴
     const t0 = performance.now();
 
     const loop = (now: number) => {
@@ -281,14 +283,14 @@ function trySetup(): boolean {
       const u = Math.min(1, Math.max(0, (t - SPLIT) / (1 - SPLIT)));
       const ease = u * u * (3 - 2 * u);
       // 도착에 가까워질수록 잦아듦
-      const fade = t < 0.72 ? 1 : 1 - (t - 0.72) / 0.28;
+      const fade = t < 0.7 ? 1 : 1 - (t - 0.7) / 0.3;
 
       ctx.fillStyle = '#fff';
       for (const p of parts) {
         p.x += p.vx;
         p.y += p.vy;
-        p.vx *= 0.97;
-        p.vy *= 0.97;
+        p.vx *= 0.965;
+        p.vy *= 0.965;
         const x = p.x + (p.tx - p.x) * ease;
         const y = p.y + (p.ty - p.y) * ease;
         ctx.globalAlpha = p.a * fade;
@@ -304,7 +306,12 @@ function trySetup(): boolean {
     if (bootStarted) return;
     bootStarted = true;
 
+    // 스크럽 지연으로 스크롤이 다이브 끝을 지나쳐 있을 수 있다 —
+    // 터미널이 정확히 전체화면이 되도록 다이브 끝 지점에 스냅한 뒤 잠근다
+    const endY = section.getBoundingClientRect().top + window.scrollY + section.offsetHeight - window.innerHeight;
     const lenis = getLenis();
+    if (lenis) lenis.scrollTo(endY, { immediate: true, force: true });
+    else window.scrollTo(0, endY);
     lenis?.stop();
 
     const boot = gsap.timeline({ defaults: { ease: 'none' } });
