@@ -204,29 +204,47 @@ function trySetup(): boolean {
     return parts;
   };
 
-  /** 히어로 요소들 위치로 목적지 배정 — 광점이 다음 페이지로 "합쳐지게" */
+  /**
+   * 히어로 요소들 위치로 목적지 배정 — 광점이 다음 페이지로 "합쳐지게".
+   * 스크롤 점프의 적용 타이밍(다음 프레임)에 의존하지 않도록,
+   * "히어로 상단이 뷰포트 0이 된 후"의 좌표를 문서 좌표로 직접 환산한다.
+   */
   const assignHeroTargets = (parts: DissolveP[]) => {
-    const rects: Array<{ r: DOMRect; w: number }> = [];
-    const push = (sel: string, w: number) => {
+    const hero = document.getElementById('home');
+    if (!hero) return;
+    // 점프 완료 후 각 요소의 뷰포트 y = (요소 문서 y) - (히어로 문서 y)
+    const heroDocTop = hero.getBoundingClientRect().top + window.scrollY;
+
+    type Zone = { x: number; y: number; w: number; h: number; weight: number };
+    const zones: Zone[] = [];
+    const push = (sel: string, weight: number) => {
       const el = document.querySelector<HTMLElement>(sel);
-      if (el) rects.push({ r: el.getBoundingClientRect(), w });
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      zones.push({
+        x: r.left,
+        y: r.top + window.scrollY - heroDocTop,
+        w: r.width,
+        h: r.height,
+        weight,
+      });
     };
     push('[data-hero="portrait"]', 0.55); // 별자리 초상으로 가장 많이
     push('[data-hero="name"]', 0.15);
     push('[data-hero="intro"]', 0.15);
     push('[data-hero="cta"]', 0.15);
 
-    const totalW = rects.reduce((s, x) => s + x.w, 0);
+    const totalW = zones.reduce((s, z) => s + z.weight, 0);
     for (const p of parts) {
       let pick = Math.random() * (totalW || 1);
-      let chosen = rects[0];
-      for (const c of rects) {
-        if (pick <= c.w) { chosen = c; break; }
-        pick -= c.w;
+      let chosen: Zone | undefined = zones[0];
+      for (const z of zones) {
+        if (pick <= z.weight) { chosen = z; break; }
+        pick -= z.weight;
       }
       if (chosen) {
-        p.tx = chosen.r.left + Math.random() * chosen.r.width;
-        p.ty = chosen.r.top + Math.random() * chosen.r.height;
+        p.tx = chosen.x + Math.random() * chosen.w;
+        p.ty = chosen.y + Math.random() * chosen.h;
       } else {
         p.tx = Math.random() * window.innerWidth;
         p.ty = Math.random() * window.innerHeight;
