@@ -38,7 +38,7 @@ if (!reduceMotion) {
   lenis.on('scroll', ScrollTrigger.update);
 }
 
-// BookshelfController / interactions.ts 에서 lenis.scrollTo / stop / start를 호출하기 위한 전역 노출
+// interactions.ts 등에서 lenis.scrollTo / stop / start를 호출하기 위한 전역 노출
 (window as unknown as { __lenis: Lenis | null }).__lenis = lenis;
 
 // (구) 시네마틱 룸/책장 씬은 3D 캐러셀로 대체되어 더 이상 로드하지 않는다.

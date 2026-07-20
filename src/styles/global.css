@@ -1,8 +1,4 @@
 @import './tokens.css';
-/* (구) 책장/서재/시네마 씬 CSS는 3D 캐러셀 도입으로 미사용 — 파일은 보존
-@import './bookshelf.css';
-@import './study-scene.css';
-@import './cinema.css'; */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

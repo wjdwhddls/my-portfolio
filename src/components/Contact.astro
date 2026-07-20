@@ -12,11 +12,9 @@ const formAction = formspreeEndpoint ?? `mailto:${profile.email}`;
 const formMethod = formspreeEndpoint ? 'POST' : 'GET';
 ---
 
-<section id="contact" class="py-16 md:py-24 relative dot-pattern">
-  <div class="absolute inset-0 bg-bg/90"></div>
-
+<section id="contact" class="py-24 md:py-48 relative">
   <div class="max-w-6xl mx-auto px-4 space-y-16 relative z-10">
-    <div class="text-center space-y-4 fade-in-up">
+    <div class="text-center space-y-4" data-flow>
       <h2 class="text-4xl md:text-5xl font-bold">
         <span class="gradient-text">Contact</span>
       </h2>
@@ -27,7 +25,7 @@ const formMethod = formspreeEndpoint ? 'POST' : 'GET';
 
     <div class="grid md:grid-cols-2 gap-12 items-start max-w-4xl mx-auto">
       <!-- 연락처 카드들 -->
-      <div class="space-y-4 fade-in-up" style="animation-delay: 0.1s;">
+      <div class="space-y-4" data-flow>
         <div class="glass-card rounded-xl p-6 space-y-2">
           <h3 class="font-bold text-lg">📧 Email</h3>
           <a
@@ -67,8 +65,8 @@ const formMethod = formspreeEndpoint ? 'POST' : 'GET';
       <!-- 연락 폼 -->
       <form
         id="contact-form"
-        class="space-y-4 fade-in-up"
-        style="animation-delay: 0.2s;"
+        class="space-y-4"
+        data-flow
         action={formAction}
         method={formMethod}
       >

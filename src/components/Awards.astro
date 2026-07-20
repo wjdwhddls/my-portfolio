@@ -1,54 +1,117 @@
 ---
 /**
- * Awards — About 섹션 내부에 노출되는 수상 카드 그리드.
- * - awards.ts에서 데이터 로드, 2×2 grid로 노출
- * - rankKey에 따라 트로피·메달 이모지와 액센트 색상 분기
- * - 'TS' 같은 팀명은 카드 우상단 칩으로 강조
+ * Awards — 수상 내역을 "별자리"로 연출.
+ * - 각 카드 상단에 빛나는 별(✦)이 있고, 스크롤에 따라 별들을 잇는
+ *   라인이 그려진다 (awards-constellation.ts, stroke-dashoffset scrub).
+ * - 전역 3D 배경이 이 구간에서 별자리 성단으로 모핑되어 세계관이 이어진다.
+ * - awards.ts에서 데이터 로드, rankKey에 따라 강조 분기.
  */
 import { awards } from '../data/awards';
 ---
 
-<section id="awards" class="py-16 md:py-24 relative">
-  <div class="max-w-7xl mx-auto px-4 space-y-12">
-    <div class="text-center space-y-4 fade-in-up">
+<section id="awards" class="py-24 md:py-48 relative">
+  <div class="max-w-7xl mx-auto px-4 space-y-16 relative">
+    <div class="text-center space-y-4" data-flow>
       <h2 class="text-4xl md:text-5xl font-bold">
         <span class="gradient-text">Awards</span>
       </h2>
       <p class="text-ink-muted max-w-2xl mx-auto">
-        팀과 함께, 외부 심사로 인정받은 4건의 수상.
+        팀과 함께, 외부 심사로 인정받은 {awards.length}건의 수상 — 하나의 별자리로.
       </p>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    {
-      awards.map((award, i) => (
-        <article
-          class="glass-card rounded-2xl p-6 space-y-4 relative overflow-hidden fade-in-up break-keep"
-          style={`animation-delay: ${0.1 * (i + 1)}s;`}
-        >
-          {/* 배경 하이라이트 */}
-          <div
-            class="absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl pointer-events-none"
-            style="background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);"
-            aria-hidden="true"
-          />
+    <div id="awards-field" class="relative" data-flow>
+      <!-- 별을 잇는 라인 (JS가 경로 계산, 스크롤로 드로잉) -->
+      <svg class="awards-lines" aria-hidden="true">
+        <polyline class="awards-polyline" fill="none" />
+      </svg>
 
-          {/* 헤더 — 모든 카드가 동일한 위치에서 시작하도록 등급명만 노출 */}
-          <header class="relative">
-            <h4 class="text-xl font-bold leading-tight whitespace-nowrap">
-              <span class="gradient-text">{award.rank}</span>
-            </h4>
-          </header>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-8">
+        {
+          awards.map((award) => (
+            <article class="award-card glass-card rounded-2xl p-6 space-y-4 relative break-keep">
+              {/* 카드 위의 별 — 라인의 앵커 */}
+              <span class="award-star" aria-hidden="true" />
 
-          {/* 본문 */}
-          <div class="space-y-2 relative">
-            <p class="text-sm font-medium text-ink leading-snug">{award.competition}</p>
-            <p class="text-xs text-ink-muted">주관 · {award.organizer}</p>
-            <p class="text-xs text-ink-muted leading-relaxed pt-1">{award.note}</p>
-          </div>
-        </article>
-      ))
-    }
+              {/* 배경 하이라이트 */}
+              <div
+                class="absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl pointer-events-none"
+                style="background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);"
+                aria-hidden="true"
+              />
+
+              <header class="relative">
+                <h4 class="text-xl font-bold leading-tight whitespace-nowrap">
+                  <span class="gradient-text">{award.rank}</span>
+                </h4>
+              </header>
+
+              <div class="space-y-2 relative">
+                <p class="text-sm font-medium text-ink leading-snug">{award.competition}</p>
+                <p class="text-xs text-ink-muted">주관 · {award.organizer}</p>
+                <p class="text-xs text-ink-muted leading-relaxed pt-1">{award.note}</p>
+              </div>
+            </article>
+          ))
+        }
+      </div>
     </div>
   </div>
 </section>
+
+<style>
+  .awards-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .awards-polyline {
+    stroke: rgba(255, 255, 255, 0.35);
+    stroke-width: 1;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.35));
+  }
+
+  .award-card {
+    z-index: 1;
+    transition: transform 0.4s var(--ease-out-soft), box-shadow 0.4s ease;
+  }
+
+  .award-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 0 40px rgba(255, 255, 255, 0.08), 0 20px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  /* 카드 상단 중앙의 별 */
+  .award-star {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.8), 0 0 24px 6px rgba(255, 255, 255, 0.25);
+    animation: award-star-pulse 2.6s ease-in-out infinite;
+  }
+
+  .award-card:nth-child(2) .award-star { animation-delay: 0.6s; }
+  .award-card:nth-child(3) .award-star { animation-delay: 1.2s; }
+  .award-card:nth-child(4) .award-star { animation-delay: 1.8s; }
+
+  @keyframes award-star-pulse {
+    0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
+    50% { opacity: 1; transform: translateX(-50%) scale(1.45); }
+  }
+</style>
+
+<script>
+  import { init } from '../scripts/awards-constellation';
+  init();
+</script>

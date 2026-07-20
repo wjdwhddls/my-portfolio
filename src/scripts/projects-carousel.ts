@@ -91,6 +91,62 @@ function trySetup(): boolean {
     scrollTrigger: { trigger: section, start: 'top 80%', toggleActions: 'play none none reverse' },
   });
 
+  /* ---------- 활성 카드 마우스 틸트 ---------- */
+  const stage = section.querySelector<HTMLElement>('.carousel-stage');
+  cards.forEach((card) => {
+    const body = card.querySelector<HTMLElement>('.carousel-card-body');
+    if (!body) return;
+    const rx = gsap.quickTo(body, 'rotationX', { duration: 0.5, ease: 'power2.out' });
+    const ry = gsap.quickTo(body, 'rotationY', { duration: 0.5, ease: 'power2.out' });
+    gsap.set(body, { transformPerspective: 900 });
+
+    card.addEventListener('pointermove', (e) => {
+      if (!card.classList.contains('is-active')) return;
+      const r = card.getBoundingClientRect();
+      const nx = (e.clientX - r.left) / r.width - 0.5;
+      const ny = (e.clientY - r.top) / r.height - 0.5;
+      rx(ny * -8);
+      ry(nx * 10);
+    });
+    card.addEventListener('pointerleave', () => {
+      rx(0);
+      ry(0);
+    });
+  });
+
+  /* ---------- 드래그로 살짝 돌려보기 (orbit 래퍼) — 놓으면 스프링 복귀 ---------- */
+  const orbit = section.querySelector<HTMLElement>('.carousel-orbit');
+  if (stage && orbit) {
+    let dragging = false;
+    let startX = 0;
+
+    stage.addEventListener('pointerdown', (e) => {
+      // 링크 클릭은 드래그로 취급하지 않음
+      if ((e.target as HTMLElement).closest('a')) return;
+      dragging = true;
+      startX = e.clientX;
+      stage.classList.add('is-dragging');
+      gsap.killTweensOf(orbit, 'rotationY');
+    });
+    window.addEventListener(
+      'pointermove',
+      (e) => {
+        if (!dragging) return;
+        const delta = Math.max(-70, Math.min(70, (e.clientX - startX) * 0.15));
+        gsap.set(orbit, { rotationY: delta });
+      },
+      { passive: true },
+    );
+    const release = () => {
+      if (!dragging) return;
+      dragging = false;
+      stage.classList.remove('is-dragging');
+      gsap.to(orbit, { rotationY: 0, duration: 1.1, ease: 'elastic.out(1, 0.45)' });
+    };
+    window.addEventListener('pointerup', release);
+    window.addEventListener('pointercancel', release);
+  }
+
   if (import.meta.env.DEV) {
     (window as unknown as Record<string, unknown>).__carousel = { ring, cards, R, angle, setActive };
   }
