@@ -141,15 +141,26 @@ function trySetup(): boolean {
   const getLenis = (): LenisLike | null =>
     (window as unknown as { __lenis: LenisLike | null }).__lenis;
 
-  /** 터미널의 글자/테두리를 샘플링해 그 자리에서 광점으로 분해·확산 */
-  const dissolveTerminal = () => {
+  type DissolveP = {
+    x: number; // 버스트 물리 위치
+    y: number;
+    vx: number;
+    vy: number;
+    tx: number; // 히어로 쪽 목적지
+    ty: number;
+    a: number;
+    s: number;
+  };
+
+  /** 터미널의 글자/테두리를 샘플링 — 광점 시작 좌표 (스크롤 점프 전에 호출) */
+  const sampleTerminalParts = (): DissolveP[] => {
     const rect = terminal.getBoundingClientRect();
     const SCALE = 0.5;
     const off = document.createElement('canvas');
     off.width = Math.max(2, Math.round(rect.width * SCALE));
     off.height = Math.max(2, Math.round(rect.height * SCALE));
     const octx = off.getContext('2d');
-    if (!octx) return;
+    if (!octx) return [];
 
     // 터미널 텍스트를 같은 위치에 그린다
     octx.fillStyle = '#fff';
@@ -167,7 +178,65 @@ function trySetup(): boolean {
 
     const data = octx.getImageData(0, 0, off.width, off.height).data;
 
-    // 전체화면 오버레이 캔버스에 광점 스폰
+    const parts: DissolveP[] = [];
+    const STEP = 2;
+    for (let gy = 0; gy < off.height; gy += STEP) {
+      for (let gx = 0; gx < off.width; gx += STEP) {
+        const alpha = data[(gy * off.width + gx) * 4 + 3];
+        if (alpha < 40) continue;
+        const x = rect.left + gx / SCALE;
+        const y = rect.top + gy / SCALE;
+        // 살짝 쪼개지는 정도의 부드러운 산개 (폭죽 X)
+        const ang = Math.random() * Math.PI * 2;
+        const speed = 0.6 + Math.random() * 1.6;
+        parts.push({
+          x,
+          y,
+          vx: Math.cos(ang) * speed,
+          vy: Math.sin(ang) * speed - 0.3,
+          tx: x,
+          ty: y,
+          a: 0.5 + Math.random() * 0.5,
+          s: 1 + Math.random() * 1.6,
+        });
+      }
+    }
+    return parts;
+  };
+
+  /** 히어로 요소들 위치로 목적지 배정 — 광점이 다음 페이지로 "합쳐지게" */
+  const assignHeroTargets = (parts: DissolveP[]) => {
+    const rects: Array<{ r: DOMRect; w: number }> = [];
+    const push = (sel: string, w: number) => {
+      const el = document.querySelector<HTMLElement>(sel);
+      if (el) rects.push({ r: el.getBoundingClientRect(), w });
+    };
+    push('[data-hero="portrait"]', 0.55); // 별자리 초상으로 가장 많이
+    push('[data-hero="name"]', 0.15);
+    push('[data-hero="intro"]', 0.15);
+    push('[data-hero="cta"]', 0.15);
+
+    const totalW = rects.reduce((s, x) => s + x.w, 0);
+    for (const p of parts) {
+      let pick = Math.random() * (totalW || 1);
+      let chosen = rects[0];
+      for (const c of rects) {
+        if (pick <= c.w) { chosen = c; break; }
+        pick -= c.w;
+      }
+      if (chosen) {
+        p.tx = chosen.r.left + Math.random() * chosen.r.width;
+        p.ty = chosen.r.top + Math.random() * chosen.r.height;
+      } else {
+        p.tx = Math.random() * window.innerWidth;
+        p.ty = Math.random() * window.innerHeight;
+      }
+    }
+  };
+
+  /** 광점 비행 — 쪼개짐(전반) → 히어로 목적지로 수렴(후반)하며 소멸 */
+  const launchDissolve = (parts: DissolveP[]) => {
+    if (parts.length === 0) return;
     const dpr = Math.min(window.devicePixelRatio, 2);
     const overlay = document.createElement('canvas');
     overlay.style.cssText = 'position:fixed;inset:0;z-index:60;pointer-events:none;';
@@ -178,47 +247,34 @@ function trySetup(): boolean {
     if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    type P = { x: number; y: number; vx: number; vy: number; a: number; s: number };
-    const parts: P[] = [];
-    const STEP = 2;
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    for (let gy = 0; gy < off.height; gy += STEP) {
-      for (let gx = 0; gx < off.width; gx += STEP) {
-        const alpha = data[(gy * off.width + gx) * 4 + 3];
-        if (alpha < 40) continue;
-        const x = rect.left + gx / SCALE;
-        const y = rect.top + gy / SCALE;
-        const ang = Math.atan2(y - cy, x - cx) + (Math.random() - 0.5) * 0.9;
-        const speed = 2.2 + Math.random() * 5.5;
-        parts.push({
-          x,
-          y,
-          vx: Math.cos(ang) * speed,
-          vy: Math.sin(ang) * speed - 0.6,
-          a: 0.5 + Math.random() * 0.5,
-          s: 1 + Math.random() * 1.6,
-        });
-      }
-    }
-
-    // 확산 렌더 루프 (~1.9s 후 자체 정리) — 커튼이 걷히는 동안에도 광점이 날아다닌다
+    const DURATION = 2300;
+    const SPLIT = 0.32; // 이 시점까지는 쪼개짐, 이후 목적지로 수렴
     const t0 = performance.now();
+
     const loop = (now: number) => {
-      const t = (now - t0) / 1900;
+      const t = (now - t0) / DURATION;
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
       if (t >= 1) {
         overlay.remove();
         return;
       }
+
+      // 수렴 구간 진행도 (easeInOut)
+      const u = Math.min(1, Math.max(0, (t - SPLIT) / (1 - SPLIT)));
+      const ease = u * u * (3 - 2 * u);
+      // 도착에 가까워질수록 잦아듦
+      const fade = t < 0.72 ? 1 : 1 - (t - 0.72) / 0.28;
+
       ctx.fillStyle = '#fff';
       for (const p of parts) {
         p.x += p.vx;
         p.y += p.vy;
-        p.vx *= 0.985;
-        p.vy *= 0.985;
-        ctx.globalAlpha = p.a * (1 - t);
-        ctx.fillRect(p.x, p.y, p.s, p.s);
+        p.vx *= 0.97;
+        p.vy *= 0.97;
+        const x = p.x + (p.tx - p.x) * ease;
+        const y = p.y + (p.ty - p.y) * ease;
+        ctx.globalAlpha = p.a * fade;
+        ctx.fillRect(x, y, p.s, p.s);
       }
       ctx.globalAlpha = 1;
       requestAnimationFrame(loop);
@@ -252,7 +308,9 @@ function trySetup(): boolean {
     //    (스크롤 이동이 눈에 보이지 않아 "페이지가 갈라지는" 느낌이 없다)
     boot.call(
       () => {
-        dissolveTerminal();
+        // ① 터미널 글자/테두리를 광점으로 샘플링 (점프 전 좌표)
+        const parts = sampleTerminalParts();
+
         // DOM 터미널은 즉시 사라지고 광점이 그 자리를 이어받는다
         gsap.to(terminal, { opacity: 0, duration: 0.15, ease: 'power1.out' });
 
@@ -268,6 +326,11 @@ function trySetup(): boolean {
           if (l) l.scrollTo(hero, { immediate: true, force: true });
           else window.scrollTo(0, hero.getBoundingClientRect().top + window.scrollY);
         }
+
+        // ② 점프 후 히어로 요소 위치가 확정되면 광점 목적지 배정 → ③ 발사
+        //    (광점들이 쪼개졌다가 초상·이름·소개글 위치로 날아가 "합쳐진다")
+        assignHeroTargets(parts);
+        launchDissolve(parts);
 
         // 전역 파티클 버스트 (0.84→1 구간을 시간으로 재생)
         const proxy = { p: 0.84 };
@@ -355,7 +418,9 @@ function trySetup(): boolean {
       tl,
       compute,
       startBoot,
-      dissolveTerminal,
+      sampleTerminalParts,
+      assignHeroTargets,
+      launchDissolve,
       get S() {
         return S;
       },
