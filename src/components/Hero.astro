@@ -6,7 +6,6 @@
  * - 배경: 파티클 canvas + 두 개의 부유 blob
  */
 import { profile } from '../data/profile';
-import HeroScene from './client/HeroScene.astro';
 import TypingText from './client/TypingText.astro';
 ---
 
@@ -14,10 +13,7 @@ import TypingText from './client/TypingText.astro';
   id="home"
   class="min-h-screen flex items-center justify-center relative overflow-hidden pt-20"
 >
-  <!-- 3D 파티클 웨이브 (Three.js) -->
-  <HeroScene />
-
-  <!-- 배경 그라데이션 blob -->
+  <!-- 배경 그라데이션 blob (3D 파티클은 전역 배경 #global-scene이 담당) -->
   <div class="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
     <div class="absolute top-20 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl float-animate"></div>
     <div

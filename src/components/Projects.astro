@@ -1,13 +1,12 @@
 ---
 /**
  * Projects 섹션 — projects.ts 데이터 기반.
- * 데스크톱(≥768px)에서는 사실적 야간 서재 씬(좌측 책상 + 우측 책장),
- * 모바일에서는 기존 카드 그리드.
+ * 데스크톱(≥768px): 스크롤로 회전하는 3D 원형 캐러셀 (projects-carousel.ts),
+ * 모바일: 기존 카드 그리드.
  */
 import { projects } from '../data/projects';
 import ProjectCard from './ProjectCard.astro';
 import CardTilt from './client/CardTilt.astro';
-import StudyScene from './StudyScene.astro';
 ---
 
 <section id="projects" class="py-16 md:py-24 relative">
@@ -17,7 +16,7 @@ import StudyScene from './StudyScene.astro';
         <span class="gradient-text">Projects</span>
       </h2>
       <p class="text-ink-muted max-w-2xl mx-auto">
-        AI 모델링·백엔드·데이터 분석을 가로지르는 실제 프로젝트들입니다. 모든 코드는 GitHub에서 공개되어 있어요.
+        AI 모델링·백엔드·데이터 분석을 가로지르는 실제 프로젝트들입니다. 스크롤로 갤러리를 회전해 보세요.
       </p>
     </div>
 
@@ -31,18 +30,240 @@ import StudyScene from './StudyScene.astro';
     </div>
   </div>
 
-  <!-- 데스크톱: 풀 뷰포트 sticky pin 룸. max-w 컨테이너 밖에 두어
-       100vw 를 차지하고 스크롤 시 viewport 에 고정된다. -->
-  <div class="hidden md:block">
-    <div id="cinema-section" class="cinema-section">
-      <div class="cinema-pin">
-        <div class="cinema-stage">
-          <StudyScene projects={projects} />
+  <!-- 데스크톱: 3D 원형 캐러셀 (sticky pin) -->
+  <div class="hidden md:block" id="carousel-section">
+    <div class="carousel-pin">
+      <div class="carousel-stage">
+        <div class="carousel-ring">
+          {
+            projects.map((project, i) => (
+              <article class="carousel-card glass" data-title={project.title} data-index={i}>
+                <div class="carousel-card-head">
+                  <span class="carousel-card-emoji">{project.emoji}</span>
+                  <div>
+                    <h3 class="carousel-card-title">{project.title}</h3>
+                    {project.context && <p class="carousel-card-context">{project.context}</p>}
+                  </div>
+                </div>
+
+                <p class="carousel-card-summary">{project.summary}</p>
+
+                <ul class="carousel-card-highlights">
+                  {project.highlights.slice(0, 3).map((h) => (
+                    <li>{h}</li>
+                  ))}
+                </ul>
+
+                <div class="carousel-card-stack">
+                  {project.stack.slice(0, 6).map((s) => (
+                    <span class="carousel-chip">{s}</span>
+                  ))}
+                </div>
+
+                <div class="carousel-card-footer">
+                  <span class="carousel-card-role">{project.role}</span>
+                  <div class="carousel-card-links">
+                    {project.links.map((l) => (
+                      <a href={l.url} target="_blank" rel="noopener noreferrer">
+                        {l.label} ↗
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </article>
+            ))
+          }
         </div>
-        <div class="cinema-vignette" aria-hidden="true"></div>
+      </div>
+
+      <!-- HUD: 현재 인덱스/제목 -->
+      <div class="carousel-hud" aria-hidden="true">
+        <span class="carousel-hud-index">01 / {String(projects.length).padStart(2, '0')}</span>
+        <span class="carousel-hud-title">{projects[0].title}</span>
+        <span class="carousel-hud-hint">SCROLL TO ROTATE</span>
       </div>
     </div>
   </div>
 
   <CardTilt />
 </section>
+
+<style>
+  #carousel-section {
+    height: 300vh;
+    position: relative;
+  }
+
+  .carousel-pin {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .carousel-stage {
+    perspective: 2000px;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .carousel-ring {
+    position: relative;
+    transform-style: preserve-3d;
+    width: 420px;
+    height: 520px;
+  }
+
+  .carousel-card {
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    backface-visibility: hidden;
+    opacity: 0.35;
+    filter: brightness(0.55);
+    transition: opacity 0.5s ease, filter 0.5s ease, box-shadow 0.5s ease;
+  }
+
+  .carousel-card.is-active {
+    opacity: 1;
+    filter: brightness(1);
+    box-shadow: 0 0 60px rgba(255, 255, 255, 0.08), 0 30px 60px rgba(0, 0, 0, 0.5);
+  }
+
+  .carousel-card-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+  }
+
+  .carousel-card-emoji {
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .carousel-card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .carousel-card-context {
+    margin-top: 0.3rem;
+    font-size: 0.75rem;
+    color: rgb(var(--color-ink-subtle));
+  }
+
+  .carousel-card-summary {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: rgb(var(--color-ink-muted));
+  }
+
+  .carousel-card-highlights {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: rgb(var(--color-ink-muted));
+    padding-left: 1rem;
+    list-style: disc;
+  }
+
+  .carousel-card-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: auto;
+  }
+
+  .carousel-chip {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid rgb(var(--color-border));
+    border-radius: 999px;
+    color: rgb(var(--color-ink-muted));
+  }
+
+  .carousel-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 0.9rem;
+  }
+
+  .carousel-card-role {
+    font-size: 0.75rem;
+    color: rgb(var(--color-ink-subtle));
+  }
+
+  .carousel-card-links {
+    display: flex;
+    gap: 0.8rem;
+  }
+
+  .carousel-card-links a {
+    font-size: 0.8rem;
+    color: rgb(var(--color-primary-hover));
+    transition: color 0.2s ease;
+  }
+
+  .carousel-card-links a:hover {
+    color: rgb(var(--color-primary));
+  }
+
+  .carousel-hud {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    text-align: center;
+  }
+
+  .carousel-hud-index {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: rgb(var(--color-ink-subtle));
+    letter-spacing: 0.2em;
+  }
+
+  .carousel-hud-title {
+    font-size: 0.9rem;
+    color: rgb(var(--color-ink-muted));
+    max-width: 640px;
+  }
+
+  .carousel-hud-hint {
+    margin-top: 0.4rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.4em;
+    color: rgb(var(--color-ink-subtle));
+    opacity: 0.7;
+  }
+
+  /* 모션 감소 선호 시 캐러셀 숨김 — 모바일 그리드가 md 이상에서도 노출되도록 처리 불가하므로
+     간단히 캐러셀 섹션을 정적 1화면으로 축소 */
+  @media (prefers-reduced-motion: reduce) {
+    #carousel-section { height: auto; }
+    .carousel-pin { position: static; height: auto; }
+  }
+</style>
+
+<script>
+  import { init } from '../scripts/projects-carousel';
+  init();
+</script>

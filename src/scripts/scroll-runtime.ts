@@ -7,7 +7,7 @@
  * - GSAP ticker로 Lenis raf를 호출해 두 라이브러리가 같은 rAF 루프를 공유.
  * - `prefers-reduced-motion` 시 Lenis 자체를 생성하지 않고, 시네마틱 룸도
  *   정적 폴백으로 동작.
- * - dynamic import로 cinematic-room을 비동기 로딩 → 초기 페인트 영향 최소화.
+ * - (구) 시네마틱 룸 로딩은 3D 캐러셀 도입으로 제거됨.
  */
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -41,7 +41,4 @@ if (!reduceMotion) {
 // BookshelfController / interactions.ts 에서 lenis.scrollTo / stop / start를 호출하기 위한 전역 노출
 (window as unknown as { __lenis: Lenis | null }).__lenis = lenis;
 
-// 시네마틱 룸 초기화는 별도 청크로 분리해 비동기 로딩
-import('./cinematic-room')
-  .then((m) => m.init())
-  .catch((err) => console.error('[scroll-runtime] cinematic-room load failed', err));
+// (구) 시네마틱 룸/책장 씬은 3D 캐러셀로 대체되어 더 이상 로드하지 않는다.

@@ -116,7 +116,9 @@ function trySetup(): boolean {
     // 씬 줌 — 가속 이징으로 "빨려 들어가는" 감각
     .to(scene, { scale: () => S, x: () => dx, y: () => dy, duration: 1, ease: 'power2.in' }, 0)
     // 노트북 화면 콘텐츠 크로스페이드 (베이크된 IDE → 실제 DOM)
-    .to(inner, { opacity: 1, duration: 0.3 }, 0.4)
+    .to(inner, { opacity: 1, duration: 0.25 }, 0.38)
+    // 부팅 로그 — 줌이 깊어질수록 순차 출력
+    .to(section.querySelectorAll('.boot-line'), { opacity: 1, y: 0, duration: 0.06, stagger: 0.075 }, 0.48)
     // 마지막 — 블랙 페이드로 다음 섹션(히어로)과 이음새 없이 연결
     .to(fade, { opacity: 1, duration: 0.1 }, 0.9);
 

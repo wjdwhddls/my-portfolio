@@ -33,10 +33,20 @@ const base = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
       <!-- 노트북 화면 rect에 정렬되는 콘텐츠 레이어 (JS가 위치/크기 지정) -->
       <div class="dive-screen" aria-hidden="true">
         <div class="dive-screen-inner">
-          <div class="dive-screen-content">
-            <p class="dive-eyebrow">AI ENGINEER · BACKEND DEVELOPER</p>
-            <p class="dive-name gradient-text">정종인</p>
-            <p class="dive-tagline">실세계 문제를 AI와 엔지니어링으로 풉니다<span class="dive-caret"></span></p>
+          <div class="dive-terminal">
+            <div class="dive-terminal-bar">
+              <span class="dive-dot" style="background:#ff5f57"></span>
+              <span class="dive-dot" style="background:#febc2e"></span>
+              <span class="dive-dot" style="background:#28c840"></span>
+              <span class="dive-terminal-title">jongin@macbook — zsh</span>
+            </div>
+            <div class="dive-terminal-body">
+              <p class="boot-line"><span class="boot-prompt">jongin@macbook ~ %</span> ./portfolio --start</p>
+              <p class="boot-line"><span class="boot-ok">[ OK ]</span> 프로필 로드 완료 — 정종인 (AI Engineer · Backend)</p>
+              <p class="boot-line"><span class="boot-ok">[ OK ]</span> 프로젝트 3건 마운트</p>
+              <p class="boot-line"><span class="boot-ok">[ OK ]</span> 뉴럴 엔진 기동</p>
+              <p class="boot-line boot-welcome">Welcome. 화면 속 세계로 진입합니다<span class="dive-caret"></span></p>
+            </div>
           </div>
         </div>
       </div>
@@ -101,30 +111,55 @@ const base = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
     justify-content: center;
   }
 
-  .dive-screen-content {
-    text-align: center;
+  .dive-terminal {
+    width: min(720px, 72%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    background: rgba(8, 8, 8, 0.92);
+    overflow: hidden;
+    font-family: 'JetBrains Mono', monospace;
+    box-shadow: 0 0 80px rgba(255, 255, 255, 0.06);
+  }
+
+  .dive-terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .dive-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .dive-terminal-title {
+    margin-left: 10px;
+    font-size: 0.75rem;
+    color: rgb(var(--color-ink-subtle));
+  }
+
+  .dive-terminal-body {
+    padding: 1.25rem 1.5rem 1.75rem;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    align-items: center;
-  }
-
-  .dive-eyebrow {
-    color: rgb(var(--color-ink-subtle));
-    letter-spacing: 0.45em;
-    font-size: 0.875rem;
-  }
-
-  .dive-name {
-    font-size: clamp(4rem, 10vw, 8rem);
-    font-weight: 700;
-    line-height: 1.1;
-  }
-
-  .dive-tagline {
+    gap: 0.65rem;
+    font-size: 1rem;
     color: rgb(var(--color-ink-muted));
-    font-size: 1.25rem;
+    text-align: left;
   }
+
+  .boot-line {
+    opacity: 0; /* dive 타임라인이 순차 등장시킴 */
+    transform: translateY(8px);
+  }
+
+  .boot-prompt { color: rgb(var(--color-ink-subtle)); }
+  .boot-ok { color: rgb(var(--color-primary)); font-weight: 500; }
+  .boot-welcome { color: rgb(var(--color-ink)); margin-top: 0.35rem; }
 
   .dive-caret {
     display: inline-block;
