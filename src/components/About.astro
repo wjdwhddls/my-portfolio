@@ -1,21 +1,195 @@
 ---
 /**
- * About — 자기소개 한 단락만 노출하는 컴팩트 섹션.
- *  - 기술 스택은 사이트 다른 영역(WhatIDo)에서 충분히 어필되므로 제거
- *  - 수상 내역은 메인 Awards 섹션으로 분리됨 (Projects 다음)
+ * Career — 경력 로드맵 섹션 (구 About).
+ * - timeline.ts의 마일스톤을 과거→현재 순으로 로드맵에 배치
+ * - 진입 시 트랙 라인이 그려지고 마일스톤이 순서대로 떠오른다 (GSAP)
+ * - 이 구간에서 전역 파티클 배경이 "로드맵 경로 + 화살표" 형태로 모핑
+ *   (global-scene.ts shape 1)
  */
+import { timeline } from '../data/timeline';
 ---
 
 <section id="about" class="py-24 md:py-48 relative">
-  <div class="max-w-3xl mx-auto px-4 relative z-10">
+  <div class="max-w-5xl mx-auto px-4 space-y-20 relative z-10">
     <div class="text-center space-y-4" data-flow>
       <h2 class="text-4xl md:text-5xl font-bold">
-        <span class="gradient-text">About</span>
+        <span class="gradient-text">Career</span>
       </h2>
-      <p class="text-ink-muted leading-relaxed">
-        복잡함은 AI에 맡기고, 사람에겐 더 단순한 일상을.
-        그 사이를 잇는 개발자입니다.
+      <p class="text-ink-muted max-w-2xl mx-auto">
+        걸어온 길, 그리고 나아가는 방향입니다.
       </p>
     </div>
+
+    <ol class="roadmap" data-flow>
+      <!-- 트랙 라인 (JS가 그려지는 애니메이션 부여) -->
+      <span class="roadmap-track" aria-hidden="true"></span>
+
+      {
+        timeline.map((item) => (
+          <li class="roadmap-item">
+            <span class="roadmap-dot" aria-hidden="true" />
+            <div class="roadmap-card glass-card rounded-2xl p-6 space-y-2">
+              <div class="flex items-center gap-2">
+                <p class="roadmap-date">{item.period}</p>
+                {item.current && <span class="roadmap-badge">NOW</span>}
+              </div>
+              <h3 class="text-lg font-bold leading-snug">{item.title}</h3>
+              <p class="text-xs text-ink-subtle">{item.organization}</p>
+              <p class="text-sm text-ink-muted leading-relaxed">{item.description}</p>
+            </div>
+          </li>
+        ))
+      }
+
+      <!-- 다음 챕터 화살표 -->
+      <li class="roadmap-item roadmap-next">
+        <span class="roadmap-dot roadmap-dot-hollow" aria-hidden="true" />
+        <div class="roadmap-card-next">
+          <p class="roadmap-date">Next</p>
+          <p class="text-sm text-ink-muted">AI Agent Engineer로<br />향하는 다음 챕터 →</p>
+        </div>
+      </li>
+    </ol>
   </div>
 </section>
+
+<style>
+  .roadmap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    padding-left: 2rem;
+  }
+
+  /* 트랙 라인 — 모바일: 수직 */
+  .roadmap-track {
+    position: absolute;
+    left: 5px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.08));
+    transform-origin: top;
+  }
+
+  .roadmap-item {
+    position: relative;
+  }
+
+  .roadmap-dot {
+    position: absolute;
+    left: -2rem;
+    top: 10px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 12px 3px rgba(255, 255, 255, 0.55), 0 0 30px 8px rgba(255, 255, 255, 0.18);
+  }
+
+  .roadmap-dot-hollow {
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    box-shadow: none;
+  }
+
+  .roadmap-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    color: rgb(var(--color-ink-subtle));
+  }
+
+  .roadmap-badge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: #fff;
+    animation: roadmap-badge-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes roadmap-badge-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.25); }
+    50% { box-shadow: 0 0 14px 3px rgba(255, 255, 255, 0.25); }
+  }
+
+  .roadmap-card {
+    max-width: 34rem;
+  }
+
+  .roadmap-card-next {
+    padding: 0.4rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  /* 데스크톱: 수평 로드맵 */
+  @media (min-width: 768px) {
+    .roadmap {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 2.5rem;
+      padding-left: 0;
+      padding-top: 2.5rem;
+    }
+
+    .roadmap-track {
+      left: 4%;
+      right: 4%;
+      top: 5px;
+      bottom: auto;
+      width: auto;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.08));
+      transform-origin: left;
+    }
+
+    .roadmap-item {
+      flex: 1;
+    }
+
+    .roadmap-dot {
+      left: 0;
+      top: -2.5rem;
+    }
+
+    .roadmap-next {
+      flex: 0.7;
+      align-self: flex-start;
+    }
+  }
+</style>
+
+<script>
+  /**
+   * 로드맵 순차 등장 — 트랙 라인이 그려진 뒤 마일스톤이 하나씩 떠오른다.
+   * reduced-motion 시 생략 (기본 노출 상태).
+   */
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const roadmap = document.querySelector('.roadmap');
+    if (roadmap) {
+      const isDesktop = window.innerWidth >= 768;
+      const tl = gsap.timeline({
+        scrollTrigger: { trigger: roadmap, start: 'top 75%', toggleActions: 'play none none none' },
+        defaults: { ease: 'power3.out' },
+      });
+
+      tl.from('.roadmap-track', isDesktop ? { scaleX: 0, duration: 1.1 } : { scaleY: 0, duration: 1.1 })
+        .from('.roadmap-item', { opacity: 0, y: 44, duration: 0.7, stagger: 0.35 }, 0.25);
+
+      if (import.meta.env.DEV) {
+        (window as unknown as Record<string, unknown>).__roadmapIntro = tl;
+      }
+    }
+  }
+</script>

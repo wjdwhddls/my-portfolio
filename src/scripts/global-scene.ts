@@ -3,11 +3,11 @@
  *
  * 섹션에 따라 파티클이 실시간 모핑한다 (uShape 0→3):
  *   0 히어로   : 파티클 바다 (사인파 물결 + 마우스 리플)
- *   1 소개     : 뉴럴 네트워크 그래프 (노드 + 엣지, 펄스)
+ *   1 경력     : 로드맵 경로 (마일스톤 노드 + 진행 화살표, 펄스)
  *   2 수상     : 별자리 성단 (트윙클)
  *   3 연락처   : 중심으로 수렴하는 동심원 파동
  *
- * - 형태별 타겟 좌표를 attribute(aNet/aStar/aWave)로 미리 계산, 셰이더에서 블렌드
+ * - 형태별 타겟 좌표를 attribute(aRoad/aStar/aWave)로 미리 계산, 셰이더에서 블렌드
  * - 전환 중에는 f(1-f) 기반 산란(scatter)을 더해 "흩어졌다 재조립"되는 감각
  * - 섹션 전환은 ScrollTrigger onEnter/onEnterBack → uShape/카메라/밝기 트윈
  * - 캔버스는 fixed 전역 배경 (#global-scene), 콘텐츠는 z-index로 위에 얹힘
@@ -23,9 +23,9 @@ const VERTEX_SHADER = /* glsl */ `
   uniform float uTime;
   uniform vec2 uMouse;       // 포인터 월드 XZ
   uniform float uPixelRatio;
-  uniform float uShape;      // 0 바다, 1 네트워크, 2 별자리, 3 파동 (연속값)
+  uniform float uShape;      // 0 바다, 1 로드맵, 2 별자리, 3 파동 (연속값)
   attribute float aRand;
-  attribute vec3 aNet;
+  attribute vec3 aRoad;
   attribute vec3 aStar;
   attribute vec3 aWave;
   varying float vAlpha;
@@ -33,11 +33,11 @@ const VERTEX_SHADER = /* glsl */ `
   void main() {
     // 인접 형태끼리 piecewise-linear 블렌드 (인접 가중치 합 = 1)
     float wSea  = clamp(1.0 - abs(uShape - 0.0), 0.0, 1.0);
-    float wNet  = clamp(1.0 - abs(uShape - 1.0), 0.0, 1.0);
+    float wRoad = clamp(1.0 - abs(uShape - 1.0), 0.0, 1.0);
     float wStar = clamp(1.0 - abs(uShape - 2.0), 0.0, 1.0);
     float wWave = clamp(1.0 - abs(uShape - 3.0), 0.0, 1.0);
 
-    vec3 p = position * wSea + aNet * wNet + aStar * wStar + aWave * wWave;
+    vec3 p = position * wSea + aRoad * wRoad + aStar * wStar + aWave * wWave;
 
     float t = uTime * 0.6;
 
@@ -51,8 +51,8 @@ const VERTEX_SHADER = /* glsl */ `
     float ripple = ( exp(-dM * dM * 0.045) * sin(dM * 1.8 - uTime * 3.0) * 0.7
                    + exp(-dM * dM * 0.03) * 1.1 ) * max(wSea, wWave * 0.5);
 
-    // ── 네트워크: 미세한 펄스 진동
-    float net = sin(uTime * 2.0 + aRand * 12.56) * 0.06 * wNet;
+    // ── 로드맵: 미세한 펄스 진동
+    float net = sin(uTime * 2.0 + aRand * 12.56) * 0.06 * wRoad;
 
     // ── 파동: 중심 동심원 물결
     float rW = length(p.xz);
@@ -125,48 +125,83 @@ function buildSea(): Float32Array {
   return arr;
 }
 
-/** 뉴럴 네트워크 — 레이어드 노드 + 엣지 위 분포 */
-function buildNetwork(): Float32Array {
+/**
+ * 경력 로드맵 — 왼쪽 아래에서 오른쪽 위로 오르는 경로.
+ * 마일스톤 노드 링 2개(졸업/인턴) + 끝의 진행 화살표 + 경로 주변 잔별.
+ */
+function buildRoadmap(): Float32Array {
   const arr = new Float32Array(COUNT * 3);
-  const LAYERS = 5;
-  const nodes: THREE.Vector3[] = [];
-  for (let l = 0; l < LAYERS; l++) {
-    const perLayer = 6 + Math.round(Math.random() * 6); // 6~12
-    const x = (l / (LAYERS - 1) - 0.5) * 22;
-    for (let n = 0; n < perLayer; n++) {
-      nodes.push(
-        new THREE.Vector3(
-          x + (Math.random() - 0.5) * 2.5,
-          (n / Math.max(perLayer - 1, 1) - 0.5) * 12 + (Math.random() - 0.5) * 1.5 + 1,
-          (Math.random() - 0.5) * 6 - 2,
-        ),
-      );
-    }
+
+  // 경로 정점: 시작 → 마일스톤1 → 마일스톤2 → 화살표 끝 (Career 카메라 프레이밍 기준)
+  const M0 = new THREE.Vector3(-6.5, -0.8, -2);
+  const M1 = new THREE.Vector3(1.5, 1.0, -2);
+  const TIP = new THREE.Vector3(9.5, 2.4, -2);
+  const path = [new THREE.Vector3(-11.5, -1.8, -2), M0, M1, TIP];
+
+  // 세그먼트 길이 비례 샘플링 준비
+  const segs: Array<{ a: THREE.Vector3; b: THREE.Vector3; len: number }> = [];
+  for (let i = 0; i < path.length - 1; i++) {
+    segs.push({ a: path[i], b: path[i + 1], len: path[i].distanceTo(path[i + 1]) });
   }
-  // 각 노드의 최근접 3개 인덱스
-  const nearest: number[][] = nodes.map((a, ai) =>
-    nodes
-      .map((b, bi) => ({ bi, d: ai === bi ? Infinity : a.distanceTo(b) }))
-      .sort((x, y) => x.d - y.d)
-      .slice(0, 3)
-      .map((e) => e.bi),
-  );
+  const totalLen = segs.reduce((s, x) => s + x.len, 0);
+
+  // 화살촉 날개 2개 (마지막 세그먼트 방향 기준 ±150°)
+  const dir = TIP.clone().sub(M1).normalize();
+  const wingLen = 1.7;
+  const rot = (angle: number) => {
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    return new THREE.Vector3(dir.x * c - dir.y * s, dir.x * s + dir.y * c, 0);
+  };
+  const wingA = rot((150 * Math.PI) / 180);
+  const wingB = rot((-150 * Math.PI) / 180);
 
   const v = new THREE.Vector3();
   for (let i = 0; i < COUNT; i++) {
-    const ni = Math.floor(Math.random() * nodes.length);
-    if (Math.random() < 0.35) {
-      // 노드 블롭
-      v.copy(nodes[ni]).add(
-        new THREE.Vector3((Math.random() - 0.5) * 0.7, (Math.random() - 0.5) * 0.7, (Math.random() - 0.5) * 0.7),
+    const r = Math.random();
+
+    if (r < 0.5) {
+      // 경로 본선 — 길이 비례로 세그먼트 선택
+      let pick = Math.random() * totalLen;
+      let seg = segs[0];
+      for (const sg of segs) {
+        if (pick <= sg.len) { seg = sg; break; }
+        pick -= sg.len;
+      }
+      v.lerpVectors(seg.a, seg.b, pick / seg.len);
+      v.x += (Math.random() - 0.5) * 0.24;
+      v.y += (Math.random() - 0.5) * 0.24;
+      v.z += (Math.random() - 0.5) * 0.4;
+    } else if (r < 0.76) {
+      // 마일스톤 노드 링 (반반)
+      const c = Math.random() < 0.5 ? M0 : M1;
+      const theta = Math.random() * Math.PI * 2;
+      const radius = 1.15 + (Math.random() - 0.5) * 0.28;
+      v.set(c.x + Math.cos(theta) * radius, c.y + Math.sin(theta) * radius, c.z + (Math.random() - 0.5) * 0.4);
+    } else if (r < 0.9) {
+      // 화살촉 날개
+      const wing = Math.random() < 0.5 ? wingA : wingB;
+      const t = Math.random();
+      v.set(
+        TIP.x + wing.x * wingLen * t + (Math.random() - 0.5) * 0.2,
+        TIP.y + wing.y * wingLen * t + (Math.random() - 0.5) * 0.2,
+        TIP.z + (Math.random() - 0.5) * 0.3,
       );
     } else {
-      // 엣지 위 분포
-      const nb = nodes[nearest[ni][Math.floor(Math.random() * 3)]];
-      v.lerpVectors(nodes[ni], nb, Math.random()).add(
-        new THREE.Vector3((Math.random() - 0.5) * 0.12, (Math.random() - 0.5) * 0.12, (Math.random() - 0.5) * 0.12),
-      );
+      // 경로 주변 잔별 (넓은 산포)
+      const t = Math.random();
+      let pick = t * totalLen;
+      let seg = segs[0];
+      for (const sg of segs) {
+        if (pick <= sg.len) { seg = sg; break; }
+        pick -= sg.len;
+      }
+      v.lerpVectors(seg.a, seg.b, Math.min(1, pick / seg.len));
+      v.x += (Math.random() - 0.5) * 3.4;
+      v.y += (Math.random() - 0.5) * 3.4;
+      v.z += (Math.random() - 0.5) * 2.0;
     }
+
     arr[i * 3] = v.x;
     arr[i * 3 + 1] = v.y;
     arr[i * 3 + 2] = v.z;
@@ -233,7 +268,7 @@ export function init(canvas: HTMLCanvasElement): void {
 
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(buildSea(), 3));
-  geometry.setAttribute('aNet', new THREE.BufferAttribute(buildNetwork(), 3));
+  geometry.setAttribute('aRoad', new THREE.BufferAttribute(buildRoadmap(), 3));
   geometry.setAttribute('aStar', new THREE.BufferAttribute(buildStars(), 3));
   geometry.setAttribute('aWave', new THREE.BufferAttribute(buildWave(), 3));
   const rands = new Float32Array(COUNT);
