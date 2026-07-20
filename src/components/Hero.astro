@@ -7,6 +7,7 @@
  */
 import { profile } from '../data/profile';
 import TypingText from './client/TypingText.astro';
+import PortraitScene from './client/PortraitScene.astro';
 ---
 
 <section
@@ -70,74 +71,11 @@ import TypingText from './client/TypingText.astro';
         </div>
       </div>
 
-      <!-- 우측: 코드 에디터 mock -->
+      <!-- 우측: 별자리 초상 (public/profile.jpg → 파티클) -->
       <div class="hidden md:flex justify-center items-center">
-        <div class="relative w-full max-w-md" data-hero="editor">
-          <div class="absolute inset-0 bg-gradient-to-br from-primary to-accent rounded-2xl blur-2xl opacity-15 float-animate"></div>
-          <div class="glass rounded-2xl overflow-hidden">
-            <div class="flex items-center gap-2 px-4 py-3 border-b border-border/50">
-              <div class="flex gap-1.5">
-                <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
-                <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
-              </div>
-              <span class="text-xs text-ink-subtle ml-2">profile.ts</span>
-            </div>
-
-            <div class="code-editor p-4 space-y-1">
-              <div class="flex code-line" style="animation-delay: 0.2s;">
-                <span class="line-number">1</span>
-                <span>
-                  <span class="code-keyword">const</span>{' '}
-                  <span class="code-variable">developer</span> ={' '}
-                  <span class="code-bracket">{'{'}</span>
-                </span>
-              </div>
-              <div class="flex code-line" style="animation-delay: 0.4s;">
-                <span class="line-number">2</span>
-                <span>&nbsp;&nbsp;name: <span class="code-string">"정종인"</span>,</span>
-              </div>
-              <div class="flex code-line" style="animation-delay: 0.6s;">
-                <span class="line-number">3</span>
-                <span>&nbsp;&nbsp;role: <span class="code-string">"AI Engineer"</span>,</span>
-              </div>
-              <div class="flex code-line" style="animation-delay: 0.8s;">
-                <span class="line-number">4</span>
-                <span>
-                  &nbsp;&nbsp;stack: [<span class="code-string">"PyTorch"</span>,{' '}
-                  <span class="code-string">"TypeScript"</span>,{' '}
-                  <span class="code-string">"Python"</span>],
-                </span>
-              </div>
-              <div class="flex code-line" style="animation-delay: 1.0s;">
-                <span class="line-number">5</span>
-                <span>
-                  &nbsp;&nbsp;focus: <span class="code-string">"Multimodal AI + Backend"</span>,
-                </span>
-              </div>
-              <div class="flex code-line" style="animation-delay: 1.2s;">
-                <span class="line-number">6</span>
-                <span>
-                  &nbsp;&nbsp;<span class="code-function">build</span>() <span class="code-bracket">{'{'}</span>
-                </span>
-              </div>
-              <div class="flex code-line" style="animation-delay: 1.4s;">
-                <span class="line-number">7</span>
-                <span>
-                  &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span>{' '}
-                  <span class="code-string">"Real-world AI"</span>;
-                </span>
-              </div>
-              <div class="flex code-line" style="animation-delay: 1.6s;">
-                <span class="line-number">8</span>
-                <span>&nbsp;&nbsp;<span class="code-bracket">{'}'}</span></span>
-              </div>
-              <div class="flex code-line" style="animation-delay: 1.8s;">
-                <span class="line-number">9</span>
-                <span><span class="code-bracket">{'}'}</span>;</span>
-              </div>
-            </div>
-          </div>
+        <div class="relative w-full max-w-md" data-hero="portrait">
+          <div class="absolute inset-0 bg-gradient-to-br from-primary to-accent rounded-2xl blur-2xl opacity-10 float-animate"></div>
+          <PortraitScene />
         </div>
       </div>
     </div>

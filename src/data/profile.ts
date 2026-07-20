@@ -35,15 +35,15 @@ export interface Profile {
 export const profile: Profile = {
   name: '정종인',
   nameEn: 'Jeong Jong-in',
-  tagline: 'AI Engineer / Backend Developer',
+  tagline: 'AI Agent Engineer',
   typingPhrases: [
+    'AI Agent Engineer',
+    'LLM Orchestration',
     'Multimodal AI',
-    'Deep Learning',
     'Backend Architecture',
-    'Data-driven Products',
   ],
   intro:
-    'PyTorch 기반 멀티모달 AI와 TypeScript 백엔드를 함께 다루는 개발자입니다. 실시간 딥보이스 탐지, 음향 자동 최적화, 데이터 기반 추천 시스템 등 실세계 문제를 AI와 엔지니어링으로 풉니다.',
+    '스스로 생각하고 실행하는 AI 에이전트를 만듭니다. LLM과 도구, 백엔드 시스템을 하나로 엮어 사람의 일을 대신 해내는 지능형 시스템을 설계하는 것이 저의 방향입니다.',
   email: 'bfpark99@naver.com',
   githubHandle: 'wjdwhddls',
   githubDisplay: 'jjong_0425',

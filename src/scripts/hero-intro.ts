@@ -41,7 +41,7 @@ function build(hero: HTMLElement): void {
   const typing = q('[data-hero="typing"]');
   const intro = q('[data-hero="intro"]');
   const cta = q('[data-hero="cta"]');
-  const editor = q('[data-hero="editor"]');
+  const portrait = q('[data-hero="portrait"]');
   const hint = q('[data-hero="scroll-hint"]');
 
   // 이름을 글자 단위 마스크 스팬으로 분해 (진행적 향상 — JS 없으면 원본 그대로)
@@ -77,12 +77,8 @@ function build(hero: HTMLElement): void {
   if (intro) tl.from(intro, { y: 24, opacity: 0, duration: 0.7 }, 0.9);
   if (cta)
     tl.from(cta.children, { y: 24, opacity: 0, duration: 0.6, stagger: 0.09 }, 1.05);
-  if (editor)
-    tl.from(
-      editor,
-      { y: 44, opacity: 0, rotateX: 10, transformPerspective: 800, duration: 1.1 },
-      0.55,
-    );
+  if (portrait)
+    tl.from(portrait, { opacity: 0, scale: 0.94, duration: 1.2, ease: 'power2.out' }, 0.5);
   if (hint) tl.from(hint, { opacity: 0, duration: 0.8 }, 1.6);
 
   // 개발 검증용 훅 — rAF가 멈춘 환경에서 tl.progress(1)로 최종 상태 확인
