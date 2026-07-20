@@ -189,19 +189,9 @@ export function init(canvas: HTMLCanvasElement, imageUrl: string): void {
     const fade = 1 - scatter * 0.9;
 
     for (const s of stars) {
-      // 산란이 섞인 목표점
-      let tx: number;
-      let ty: number;
-      if (entering) {
-        // 진입 전에는 터미널이 있던 화면 중앙-왼쪽에서 흘러들어온다
-        const srcX = -W * 0.8 + s.dirX * W * 0.35;
-        const srcY = H * 0.5 + s.dirY * H * 0.6;
-        tx = s.hx + (srcX - s.hx) * scatter;
-        ty = s.hy + (srcY - s.hy) * scatter;
-      } else {
-        tx = s.hx + s.dirX * spread;
-        ty = s.hy + s.dirY * spread;
-      }
+      // 산란이 섞인 목표점 (방향성 없는 국소 산란 — 진입 시 제자리에서 조립)
+      const tx = s.hx + s.dirX * spread;
+      const ty = s.hy + s.dirY * spread;
 
       // 스프링 복원
       s.vx += (tx - s.x) * 0.045;

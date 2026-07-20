@@ -142,12 +142,10 @@ function trySetup(): boolean {
     (window as unknown as { __lenis: LenisLike | null }).__lenis;
 
   type DissolveP = {
-    x: number; // 버스트 물리 위치
+    x: number;
     y: number;
     vx: number;
     vy: number;
-    tx: number; // 히어로 쪽 목적지
-    ty: number;
     a: number;
     s: number;
   };
@@ -180,24 +178,20 @@ function trySetup(): boolean {
 
     const parts: DissolveP[] = [];
     const STEP = 2;
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
     for (let gy = 0; gy < off.height; gy += STEP) {
       for (let gx = 0; gx < off.width; gx += STEP) {
         const alpha = data[(gy * off.width + gx) * 4 + 3];
         if (alpha < 40) continue;
         const x = rect.left + gx / SCALE;
         const y = rect.top + gy / SCALE;
-        // 터미널 중심에서 화면 전체로 또렷하게 퍼지는 산개
-        const ang = Math.atan2(y - cy, x - cx) + (Math.random() - 0.5) * 1.2;
-        const speed = 2.5 + Math.random() * 5.5;
+        // 각 광점이 완전 랜덤 방향으로 확산 — 어느 쪽으로도 쏠리지 않는다
+        const ang = Math.random() * Math.PI * 2;
+        const speed = 6 + Math.random() * 10;
         parts.push({
           x,
           y,
           vx: Math.cos(ang) * speed,
           vy: Math.sin(ang) * speed - 0.4,
-          tx: x,
-          ty: y,
           a: 0.75 + Math.random() * 0.25,
           s: 1 + Math.random() * 1.6,
         });
@@ -207,54 +201,11 @@ function trySetup(): boolean {
   };
 
   /**
-   * 히어로 요소들 위치로 목적지 배정 — 광점이 다음 페이지로 "합쳐지게".
-   * 스크롤 점프의 적용 타이밍(다음 프레임)에 의존하지 않도록,
-   * "히어로 상단이 뷰포트 0이 된 후"의 좌표를 문서 좌표로 직접 환산한다.
+   * 광점 비행 — 터미널 자리에서 사방으로 대칭 확산하며 서서히 소멸.
+   * 특정 목적지로 몰지 않는다 (몰면 한쪽 구석에서 터지는 것처럼 보인다).
+   * "다음 페이지로 조립"은 커튼이 걷히며 드러나는 페이지 자신
+   * (히어로 인트로 + 초상 조립 + 배경 회로)이 담당한다.
    */
-  const assignHeroTargets = (parts: DissolveP[]) => {
-    const hero = document.getElementById('home');
-    if (!hero) return;
-    // 점프 완료 후 각 요소의 뷰포트 y = (요소 문서 y) - (히어로 문서 y)
-    const heroDocTop = hero.getBoundingClientRect().top + window.scrollY;
-
-    type Zone = { x: number; y: number; w: number; h: number; weight: number };
-    const zones: Zone[] = [];
-    const push = (sel: string, weight: number) => {
-      const el = document.querySelector<HTMLElement>(sel);
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      zones.push({
-        x: r.left,
-        y: r.top + window.scrollY - heroDocTop,
-        w: r.width,
-        h: r.height,
-        weight,
-      });
-    };
-    push('[data-hero="portrait"]', 0.55); // 별자리 초상으로 가장 많이
-    push('[data-hero="name"]', 0.15);
-    push('[data-hero="intro"]', 0.15);
-    push('[data-hero="cta"]', 0.15);
-
-    const totalW = zones.reduce((s, z) => s + z.weight, 0);
-    for (const p of parts) {
-      let pick = Math.random() * (totalW || 1);
-      let chosen: Zone | undefined = zones[0];
-      for (const z of zones) {
-        if (pick <= z.weight) { chosen = z; break; }
-        pick -= z.weight;
-      }
-      if (chosen) {
-        p.tx = chosen.x + Math.random() * chosen.w;
-        p.ty = chosen.y + Math.random() * chosen.h;
-      } else {
-        p.tx = Math.random() * window.innerWidth;
-        p.ty = Math.random() * window.innerHeight;
-      }
-    }
-  };
-
-  /** 광점 비행 — 쪼개짐(전반) → 히어로 목적지로 수렴(후반)하며 소멸 */
   const launchDissolve = (parts: DissolveP[]) => {
     if (parts.length === 0) return;
     const dpr = Math.min(window.devicePixelRatio, 2);
@@ -267,8 +218,7 @@ function trySetup(): boolean {
     if (!ctx) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const DURATION = 2600;
-    const SPLIT = 0.42; // 이 시점까지는 화면 전체로 퍼지고, 이후 목적지로 수렴
+    const DURATION = 2000;
     const t0 = performance.now();
 
     const loop = (now: number) => {
@@ -279,22 +229,17 @@ function trySetup(): boolean {
         return;
       }
 
-      // 수렴 구간 진행도 (easeInOut)
-      const u = Math.min(1, Math.max(0, (t - SPLIT) / (1 - SPLIT)));
-      const ease = u * u * (3 - 2 * u);
-      // 도착에 가까워질수록 잦아듦
-      const fade = t < 0.7 ? 1 : 1 - (t - 0.7) / 0.3;
+      // 퍼진 뒤 서서히 잦아듦 — 그 사이 커튼이 걷히며 페이지가 드러난다
+      const fade = t < 0.45 ? 1 : 1 - (t - 0.45) / 0.55;
 
       ctx.fillStyle = '#fff';
       for (const p of parts) {
         p.x += p.vx;
         p.y += p.vy;
-        p.vx *= 0.965;
-        p.vy *= 0.965;
-        const x = p.x + (p.tx - p.x) * ease;
-        const y = p.y + (p.ty - p.y) * ease;
+        p.vx *= 0.985;
+        p.vy *= 0.985;
         ctx.globalAlpha = p.a * fade;
-        ctx.fillRect(x, y, p.s, p.s);
+        ctx.fillRect(p.x, p.y, p.s, p.s);
       }
       ctx.globalAlpha = 1;
       requestAnimationFrame(loop);
@@ -352,9 +297,7 @@ function trySetup(): boolean {
           else window.scrollTo(0, hero.getBoundingClientRect().top + window.scrollY);
         }
 
-        // ② 점프 후 히어로 요소 위치가 확정되면 광점 목적지 배정 → ③ 발사
-        //    (광점들이 쪼개졌다가 초상·이름·소개글 위치로 날아가 "합쳐진다")
-        assignHeroTargets(parts);
+        // ② 광점이 화면 전체로 대칭 확산 — 커튼이 걷히며 페이지가 조립된다
         launchDissolve(parts);
 
         // 전역 파티클 버스트 (0.84→1 구간을 시간으로 재생)
@@ -444,7 +387,6 @@ function trySetup(): boolean {
       compute,
       startBoot,
       sampleTerminalParts,
-      assignHeroTargets,
       launchDissolve,
       get S() {
         return S;
