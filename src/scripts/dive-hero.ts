@@ -273,18 +273,19 @@ function trySetup(): boolean {
     // 3) Welcome
     if (welcome) boot.to(welcome, { opacity: 1, y: 0, duration: 0.22, ease: 'power1.out' }, '>+0.35');
 
-    // 4) 터미널이 그 자리에서 광점으로 분해 → 커튼 뒤에서 즉시 히어로로 점프
-    //    → 광점이 날아다니는 동안 커튼이 걷히며 조립된 페이지가 드러난다
-    //    (스크롤 이동이 눈에 보이지 않아 "페이지가 갈라지는" 느낌이 없다)
+    // 4) 터미널이 광점으로 분해 → 웜홀 워프 터널을 뚫고 다음 페이지로 비행
+    //    (터널이 화면을 덮은 사이 커튼 뒤에서 히어로로 점프해 두고,
+    //     터널이 걷히면 조립된 페이지가 드러난다)
     boot.call(
       () => {
-        // ① 터미널 글자/테두리를 광점으로 샘플링 (점프 전 좌표)
+        const WARP_MS = 3400;
+
+        // ① 터미널 글자/테두리를 광점으로 샘플링 → 그 자리에서 확산
         const parts = sampleTerminalParts();
-
-        // DOM 터미널은 즉시 사라지고 광점이 그 자리를 이어받는다
         gsap.to(terminal, { opacity: 0, duration: 0.15, ease: 'power1.out' });
+        launchDissolve(parts);
 
-        // 터미널 배경과 같은 검정 커튼 — 이 뒤에서 스크롤을 순간 이동시킨다
+        // ② 검정 커튼 + 히어로로 즉시 점프 (워프 동안 스크롤은 계속 잠금)
         const curtain = document.createElement('div');
         curtain.style.cssText = 'position:fixed;inset:0;background:#000;z-index:50;pointer-events:none;';
         document.body.appendChild(curtain);
@@ -296,31 +297,41 @@ function trySetup(): boolean {
           if (l) l.scrollTo(hero, { immediate: true, force: true });
           else window.scrollTo(0, hero.getBoundingClientRect().top + window.scrollY);
         }
+        l?.stop();
 
-        // ② 광점이 화면 전체로 대칭 확산 — 커튼이 걷히며 페이지가 조립된다
-        launchDissolve(parts);
+        const finish = () => {
+          getLenis()?.start();
+          bootDone = true;
+          // 히어로 인트로(이름 스태거 등)는 이 시점에 시작 (hero-intro.ts가 수신)
+          window.dispatchEvent(new Event('hero:reveal'));
+        };
 
-        // 전역 파티클 버스트 (0.84→1 구간을 시간으로 재생)
+        // ③ 웜홀 워프 — 종료 시 스크롤 잠금 해제
+        import('./warp-tunnel')
+          .then((m) => m.playWarp({ duration: WARP_MS, onDone: finish }))
+          .catch((err) => {
+            console.error('[dive] warp-tunnel load failed', err);
+            finish();
+          });
+
+        // ④ 워프 출구 타이밍에 맞춰 배경 파티클 버스트 + 커튼 걷기
         const proxy = { p: 0.84 };
         gsap.to(proxy, {
           p: 1,
-          duration: 1.6,
+          duration: 1.5,
+          delay: (WARP_MS - 1600) / 1000,
           ease: 'power1.inOut',
           onUpdate: () => {
             window.dispatchEvent(new CustomEvent('dive:progress', { detail: proxy.p }));
           },
         });
-
-        // 광점이 퍼지는 동안 커튼이 걷히며 페이지가 "만들어진다"
         gsap.to(curtain, {
           opacity: 0,
-          duration: 1.0,
-          delay: 0.35,
+          duration: 0.9,
+          delay: (WARP_MS - 1100) / 1000,
           ease: 'power1.inOut',
           onComplete: () => curtain.remove(),
         });
-
-        bootDone = true;
       },
       [],
       '>+0.55',

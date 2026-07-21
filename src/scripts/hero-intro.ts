@@ -15,19 +15,11 @@ export function init(): void {
   const hero = document.getElementById('home');
   if (!hero) return;
 
-  // 히어로 위에 다이브 섹션이 있으면(데스크톱) 히어로가 보일 때 인트로 시작
+  // 히어로 위에 다이브 섹션이 있으면(데스크톱) 워프 종료 신호에 맞춰 인트로 시작
+  // (커튼/터널에 가려진 동안 미리 재생돼 버리는 것을 방지)
   const rect = hero.getBoundingClientRect();
   if (rect.top > window.innerHeight * 0.6) {
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          io.disconnect();
-          build(hero);
-        }
-      },
-      { threshold: 0.25 },
-    );
-    io.observe(hero);
+    window.addEventListener('hero:reveal', () => build(hero), { once: true });
     return;
   }
   build(hero);
