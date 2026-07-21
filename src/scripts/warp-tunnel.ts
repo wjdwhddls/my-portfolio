@@ -2,7 +2,8 @@
  * 워프 터널 — 부팅(Welcome) 직후 "웜홀을 뚫고 다음 페이지로 날아가는" 전환.
  *
  * 원 스펙(스크롤 구동 단독 페이지)을 시간 기반 전환 모듈로 이식:
- *   - 인디고→시안 팔레트의 원통형 파티클 터널 + 보라 코너 플레임 + 시안 모트
+ *   - 사이트 배경 광점과 동일한 흰색 모노크롬 파티클 터널 + 흰색 모트
+ *     (원 스펙의 인디고/시안 팔레트·코너 플레임은 사이트 톤에 맞춰 제거)
  *   - 3중 컴포저(토러스/블룸/파이널) 레이어 스위칭 구성 그대로
  *   - 페이지 스크롤 대신 내부 타이머가 warp 진행(0→1)을 구동
  *   - 마우스로 비행이 살짝 기울고(스티어), 커서 주변 벽이 밀려남
@@ -16,17 +17,13 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader.js';
 import { CopyShader } from 'three/examples/jsm/shaders/CopyShader.js';
 
-/* ---------- 고정 파라미터 (스펙 그대로) ---------- */
-const BG_COLOR = '#0a0524';
-const FLAME_A = '#2bf0ff';
-const FLAME_B = '#7a3cff';
-const FLAME_AMT = 0.2;
-const ATMO_COLOR = '#8fe6ff';
+/* ---------- 고정 파라미터 (색만 흰색 모노크롬, 나머지는 스펙 그대로) ---------- */
+const ATMO_COLOR = '#ffffff';
 const ATMO_COUNT = 300;
 const ATMO_SIZE = 24;
 const ATMO_SPEED = 1.0;
-const COLOR_LOW = '#180a3a';
-const COLOR_HIGH = '#2bf0ff';
+const COLOR_LOW = '#2e2e2e';
+const COLOR_HIGH = '#ffffff';
 const OPACITY = 1.44;
 const POINT_SIZE = 5;
 const BRIGHTNESS = 0.4;
@@ -157,23 +154,10 @@ void main(){ vec2 p = gl_PointCoord - 0.5; float l = length(p); if (l > 0.5) dis
 `;
 
 const FINAL_FRAGMENT = /* glsl */ `
-uniform float iTime; uniform sampler2D tDiffuse; uniform sampler2D bloomTexture; uniform sampler2D torusTexture; uniform sampler2D haloTexture;
-uniform vec3 uBg; uniform vec3 uFlameA; uniform vec3 uFlameB; uniform float uFlameAmt;
+uniform sampler2D tDiffuse; uniform sampler2D bloomTexture; uniform sampler2D torusTexture;
 varying vec2 vUv;
-vec3 warp3d(vec3 pos, float t){ float curv=.8,a=1.9,b=0.7; pos*=2.;
-  pos.x+=curv*sin(t+a*pos.y)+t*b; pos.y+=curv*cos(t+a*pos.x);
-  pos.y+=curv*sin(t+a*pos.z)+t*b; pos.z+=curv*cos(t+a*pos.y);
-  pos.z+=curv*sin(t+a*pos.x)+t*b; pos.x+=curv*cos(t+a*pos.z);
-  return 0.5+0.5*cos(pos.xyz+vec3(1,2,4)); }
 void main(){
-  vec2 uv = 2.*vUv - 1.;
-  vec3 w = pow(warp3d(vec3(uv.x, sin(uv.y), uv.y), iTime*1.5), vec3(1.5));
-  vec3 flame = 1.5*uFlameA*w.x; flame*=w.y; flame += uFlameB*w.z;
-  flame *= smoothstep(0.25, 1., abs(uv.y));
-  float md = smoothstep(-0.7, 1., -uv.y*uv.x); flame *= md*md;
-  vec3 bg = uBg * (1.0 - 0.4 * length(uv));
-  vec3 halo = texture2D(haloTexture, vUv).xyz;
-  gl_FragColor = vec4(bg + flame*uFlameAmt + texture2D(bloomTexture, vUv).xyz + texture2D(torusTexture, vUv).xyz + texture2D(tDiffuse, vUv).xyz + halo, 1.);
+  gl_FragColor = vec4(texture2D(bloomTexture, vUv).xyz + texture2D(torusTexture, vUv).xyz + texture2D(tDiffuse, vUv).xyz, 1.);
 }
 `;
 
@@ -292,15 +276,9 @@ export function playWarp(options: WarpOptions = {}): void {
   /* ---------- 포스트프로세싱 (3중 컴포저) ---------- */
   const FinalPass = {
     uniforms: {
-      iTime: { value: 0 },
       tDiffuse: { value: null },
       torusTexture: { value: null },
       bloomTexture: { value: null },
-      haloTexture: { value: null },
-      uBg: { value: hexToVec3(BG_COLOR) },
-      uFlameA: { value: hexToVec3(FLAME_A) },
-      uFlameB: { value: hexToVec3(FLAME_B) },
-      uFlameAmt: { value: FLAME_AMT },
     },
     vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position, 1.0); }`,
     fragmentShader: FINAL_FRAGMENT,
@@ -458,7 +436,6 @@ export function playWarp(options: WarpOptions = {}): void {
     // 대기 모트 — 카메라를 따라다닌다
     atmoUniforms.uTime.value = t * ATMO_SPEED * 8.0;
     atmoPoints.position.copy(camera.position);
-    finalPass.uniforms.iTime.value = t;
 
     camera.layers.set(LAYERS.TORUS_SCENE);
     torusComposer.render();

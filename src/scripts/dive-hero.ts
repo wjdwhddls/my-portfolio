@@ -1,16 +1,17 @@
 /**
  * 다이브 히어로 — 서재 씬에서 맥북 화면 속으로 빨려 들어가면
- * 전체화면 터미널이 스스로 부팅되고, 마지막에 터미널 자체가 광점으로
- * 분해되며 히어로 페이지가 만들어지는 연출.
+ * 전체화면 터미널이 스스로 부팅되고, 마지막에 웜홀 워프 터널을 뚫고
+ * 히어로 페이지로 날아가는 연출.
  *
  * 흐름:
  *   1) 스크롤 스크럽: 서재 → 노트북 화면 줌 (여기까지만 스크롤이 관여)
  *   2) 줌 완료 시 스크롤 잠금 → 시간 기반 부팅 타임라인 자동 재생
  *      · ./portfolio --start 한 글자씩 타이핑 → [ OK ] 한 줄씩 → Welcome
  *      · 부팅 중 클릭하면 8배속 빨리감기
- *   3) Welcome 직후: 터미널 창/글자를 캔버스로 샘플링해 그 자리에서
- *      광점으로 분해·확산 (dissolve) + 전역 파티클 버스트(dive:progress)
- *   4) 자동 스크롤로 히어로 진입 + 스크롤 잠금 해제 (부팅은 세션당 1회)
+ *   3) Welcome 직후: 터미널이 안쪽으로 확대되며 사라지는 사이 워프 터널
+ *      캔버스가 크로스페이드로 덮는다 — 터널이 화면을 완전히 가린 뒤
+ *      그 뒤에서 히어로로 점프 + 전역 파티클 버스트(dive:progress)
+ *   4) 터널이 걷히면 조립된 히어로가 드러남 + 스크롤 잠금 해제 (부팅은 세션당 1회)
  *
  * 줌 수학:
  *   - 이미지 자연비(cover) 기준으로 화면 rect의 표시 좌표(scx, scy, sw, sh) 계산
@@ -141,112 +142,6 @@ function trySetup(): boolean {
   const getLenis = (): LenisLike | null =>
     (window as unknown as { __lenis: LenisLike | null }).__lenis;
 
-  type DissolveP = {
-    x: number;
-    y: number;
-    vx: number;
-    vy: number;
-    a: number;
-    s: number;
-  };
-
-  /** 터미널의 글자/테두리를 샘플링 — 광점 시작 좌표 (스크롤 점프 전에 호출) */
-  const sampleTerminalParts = (): DissolveP[] => {
-    const rect = terminal.getBoundingClientRect();
-    const SCALE = 0.5;
-    const off = document.createElement('canvas');
-    off.width = Math.max(2, Math.round(rect.width * SCALE));
-    off.height = Math.max(2, Math.round(rect.height * SCALE));
-    const octx = off.getContext('2d');
-    if (!octx) return [];
-
-    // 터미널 텍스트를 같은 위치에 그린다
-    octx.fillStyle = '#fff';
-    octx.textBaseline = 'top';
-    terminal.querySelectorAll<HTMLElement>('.boot-line, .dive-terminal-title').forEach((el) => {
-      const er = el.getBoundingClientRect();
-      const cs = getComputedStyle(el);
-      octx.font = `${parseFloat(cs.fontSize) * SCALE}px ${cs.fontFamily}`;
-      octx.fillText(el.textContent ?? '', (er.left - rect.left) * SCALE, (er.top - rect.top) * SCALE);
-    });
-    // 창 테두리
-    octx.strokeStyle = '#fff';
-    octx.lineWidth = 1;
-    octx.strokeRect(0.5, 0.5, off.width - 1, off.height - 1);
-
-    const data = octx.getImageData(0, 0, off.width, off.height).data;
-
-    const parts: DissolveP[] = [];
-    const STEP = 2;
-    for (let gy = 0; gy < off.height; gy += STEP) {
-      for (let gx = 0; gx < off.width; gx += STEP) {
-        const alpha = data[(gy * off.width + gx) * 4 + 3];
-        if (alpha < 40) continue;
-        const x = rect.left + gx / SCALE;
-        const y = rect.top + gy / SCALE;
-        // 각 광점이 완전 랜덤 방향으로 확산 — 어느 쪽으로도 쏠리지 않는다
-        const ang = Math.random() * Math.PI * 2;
-        const speed = 6 + Math.random() * 10;
-        parts.push({
-          x,
-          y,
-          vx: Math.cos(ang) * speed,
-          vy: Math.sin(ang) * speed - 0.4,
-          a: 0.75 + Math.random() * 0.25,
-          s: 1 + Math.random() * 1.6,
-        });
-      }
-    }
-    return parts;
-  };
-
-  /**
-   * 광점 비행 — 터미널 자리에서 사방으로 대칭 확산하며 서서히 소멸.
-   * 특정 목적지로 몰지 않는다 (몰면 한쪽 구석에서 터지는 것처럼 보인다).
-   * "다음 페이지로 조립"은 커튼이 걷히며 드러나는 페이지 자신
-   * (히어로 인트로 + 초상 조립 + 배경 회로)이 담당한다.
-   */
-  const launchDissolve = (parts: DissolveP[]) => {
-    if (parts.length === 0) return;
-    const dpr = Math.min(window.devicePixelRatio, 2);
-    const overlay = document.createElement('canvas');
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:60;pointer-events:none;';
-    overlay.width = window.innerWidth * dpr;
-    overlay.height = window.innerHeight * dpr;
-    document.body.appendChild(overlay);
-    const ctx = overlay.getContext('2d');
-    if (!ctx) return;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    const DURATION = 2000;
-    const t0 = performance.now();
-
-    const loop = (now: number) => {
-      const t = (now - t0) / DURATION;
-      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-      if (t >= 1) {
-        overlay.remove();
-        return;
-      }
-
-      // 퍼진 뒤 서서히 잦아듦 — 그 사이 커튼이 걷히며 페이지가 드러난다
-      const fade = t < 0.45 ? 1 : 1 - (t - 0.45) / 0.55;
-
-      ctx.fillStyle = '#fff';
-      for (const p of parts) {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vx *= 0.985;
-        p.vy *= 0.985;
-        ctx.globalAlpha = p.a * fade;
-        ctx.fillRect(p.x, p.y, p.s, p.s);
-      }
-      ctx.globalAlpha = 1;
-      requestAnimationFrame(loop);
-    };
-    requestAnimationFrame(loop);
-  };
-
   const startBoot = () => {
     if (bootStarted) return;
     bootStarted = true;
@@ -273,31 +168,15 @@ function trySetup(): boolean {
     // 3) Welcome
     if (welcome) boot.to(welcome, { opacity: 1, y: 0, duration: 0.22, ease: 'power1.out' }, '>+0.35');
 
-    // 4) 터미널이 광점으로 분해 → 웜홀 워프 터널을 뚫고 다음 페이지로 비행
-    //    (터널이 화면을 덮은 사이 커튼 뒤에서 히어로로 점프해 두고,
-    //     터널이 걷히면 조립된 페이지가 드러난다)
+    // 4) 터미널 → 웜홀 워프 터널을 뚫고 다음 페이지로 비행
+    //    (터널 캔버스가 페이드인으로 터미널을 덮고, 완전히 가려진 뒤
+    //     그 뒤에서 히어로로 점프 — 터널이 걷히면 조립된 페이지가 드러난다)
     boot.call(
       () => {
         const WARP_MS = 3400;
 
-        // ① 터미널 글자/테두리를 광점으로 샘플링 → 그 자리에서 확산
-        const parts = sampleTerminalParts();
-        gsap.to(terminal, { opacity: 0, duration: 0.15, ease: 'power1.out' });
-        launchDissolve(parts);
-
-        // ② 검정 커튼 + 히어로로 즉시 점프 (워프 동안 스크롤은 계속 잠금)
-        const curtain = document.createElement('div');
-        curtain.style.cssText = 'position:fixed;inset:0;background:#000;z-index:50;pointer-events:none;';
-        document.body.appendChild(curtain);
-
-        const hero = document.getElementById('home');
-        const l = getLenis();
-        l?.start();
-        if (hero) {
-          if (l) l.scrollTo(hero, { immediate: true, force: true });
-          else window.scrollTo(0, hero.getBoundingClientRect().top + window.scrollY);
-        }
-        l?.stop();
+        // ① 터미널이 안쪽으로 빨려 들어가듯 확대·소멸 — 그 위로 터널이 크로스페이드
+        gsap.to(terminal, { opacity: 0, scale: 1.6, duration: 0.6, ease: 'power2.in' });
 
         const finish = () => {
           getLenis()?.start();
@@ -306,7 +185,7 @@ function trySetup(): boolean {
           window.dispatchEvent(new Event('hero:reveal'));
         };
 
-        // ③ 웜홀 워프 — 종료 시 스크롤 잠금 해제
+        // ② 웜홀 워프 — 캔버스가 350ms 페이드인으로 화면을 덮는다, 종료 시 스크롤 잠금 해제
         import('./warp-tunnel')
           .then((m) => m.playWarp({ duration: WARP_MS, onDone: finish }))
           .catch((err) => {
@@ -314,7 +193,19 @@ function trySetup(): boolean {
             finish();
           });
 
-        // ④ 워프 출구 타이밍에 맞춰 배경 파티클 버스트 + 커튼 걷기
+        // ③ 터널이 화면을 완전히 가린 뒤, 그 뒤에서 히어로로 점프 (워프 동안 스크롤은 계속 잠금)
+        gsap.delayedCall(0.5, () => {
+          const hero = document.getElementById('home');
+          const l = getLenis();
+          l?.start();
+          if (hero) {
+            if (l) l.scrollTo(hero, { immediate: true, force: true });
+            else window.scrollTo(0, hero.getBoundingClientRect().top + window.scrollY);
+          }
+          l?.stop();
+        });
+
+        // ④ 워프 출구 타이밍에 맞춰 배경 파티클 버스트
         const proxy = { p: 0.84 };
         gsap.to(proxy, {
           p: 1,
@@ -324,13 +215,6 @@ function trySetup(): boolean {
           onUpdate: () => {
             window.dispatchEvent(new CustomEvent('dive:progress', { detail: proxy.p }));
           },
-        });
-        gsap.to(curtain, {
-          opacity: 0,
-          duration: 0.9,
-          delay: (WARP_MS - 1100) / 1000,
-          ease: 'power1.inOut',
-          onComplete: () => curtain.remove(),
         });
       },
       [],
@@ -397,8 +281,6 @@ function trySetup(): boolean {
       tl,
       compute,
       startBoot,
-      sampleTerminalParts,
-      launchDissolve,
       get S() {
         return S;
       },
